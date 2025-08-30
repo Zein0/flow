@@ -1,6 +1,6 @@
 const { PrismaClient } = require('@prisma/client');
 const { addDays, setHours, setMinutes, setSeconds, setMilliseconds } = require('date-fns');
-const { zonedTimeToUtc, utcToZonedTime } = require('date-fns-tz');
+const { toZonedTime } = require('date-fns-tz');
 
 const prisma = new PrismaClient();
 
@@ -248,12 +248,12 @@ async function getAvailability(doctorId, date) {
     
     // Fix timezone issue: convert UTC to Beirut time for hour comparison
     const globalCount = appointments.filter(apt => {
-      const beirutTime = utcToZonedTime(apt.startAt, 'Asia/Beirut');
+      const beirutTime = toZonedTime(apt.startAt, 'Asia/Beirut');
       return beirutTime.getHours() === hour;
     }).length;
     
     const doctorBusy = doctorId && appointments.some(apt => {
-      const beirutTime = utcToZonedTime(apt.startAt, 'Asia/Beirut');
+      const beirutTime = toZonedTime(apt.startAt, 'Asia/Beirut');
       return apt.doctorId === doctorId && beirutTime.getHours() === hour;
     });
 
