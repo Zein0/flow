@@ -239,24 +239,22 @@ async function getAvailability(doctorId, date) {
       doctorId: true
     }
   });
-  console.log('Appointments on', date, appointments);
 
   const availability = [];
   for (let hour = 8; hour < 18; hour++) {
     const hourStart = new Date(date);
     hourStart.setHours(hour, 0, 0, 0);
     
-    const globalCount = appointments.filter(apt => 
-      apt.startAt.getHours() === hour
-    ).length;
-
-    console.log(`Hour ${hour}: globalCount=${globalCount}`);
+    // Fix timezone issue: convert UTC to Beirut time for hour comparison
+    const globalCount = appointments.filter(apt => {
+      const beirutTime = new Date(apt.startAt.getTime() + (3 * 60 * 60 * 1000)); // UTC+3 for Beirut
+      return beirutTime.getHours() === hour;
+    }).length;
     
-    const doctorBusy = doctorId && appointments.some(apt => 
-      apt.doctorId === doctorId && apt.startAt.getHours() === hour
-    );
-
-    console.log(`Hour ${hour}: doctorBusy=${doctorBusy}`);
+    const doctorBusy = doctorId && appointments.some(apt => {
+      const beirutTime = new Date(apt.startAt.getTime() + (3 * 60 * 60 * 1000)); // UTC+3 for Beirut
+      return apt.doctorId === doctorId && beirutTime.getHours() === hour;
+    });
 
     availability.push({
       hour,
