@@ -14,7 +14,8 @@
       "Bash(npm run test:*)",
       "Bash(mv:*)",
       "Bash(git rm:*)",
-      "Bash(true)"
+      "Bash(true)",
+      "Bash(npm install:*)"
     ],
     "deny": []
   }
