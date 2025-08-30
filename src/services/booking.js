@@ -255,7 +255,7 @@ async function getAvailability(doctorId, date) {
 
     availability.push({
       hour,
-      globalCapacity: 6 - globalCount,
+      globalCapacity: globalCount,
       doctorAvailable: doctorId ? !doctorBusy : true,
       available: globalCount < 6 && (!doctorId || !doctorBusy)
     });

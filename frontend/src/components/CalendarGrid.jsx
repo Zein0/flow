@@ -69,7 +69,7 @@ export default function CalendarGrid() {
                   <div className="flex items-center justify-between mb-2">
                     <div className="flex items-center space-x-2">
                       <span className="text-xs text-gray-500">
-                        Capacity: {6 - availability.globalCapacity}/6
+                        Capacity: {availability.globalCapacity}/6
                       </span>
                       {!availability.doctorAvailable && selectedDoctor && (
                         <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">
