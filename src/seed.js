@@ -36,7 +36,7 @@ async function seed() {
         data: {
           name: 'Admin User',
           email: 'admin@clinic.com',
-          passwordHash: '$2a$12$GlPuQBB7A/zdk9523jkKgekdJ/kdPn5Nq.2cyj0VsCro5rVKeDDeG',
+          passwordHash: '$2a$12$OsE.u.t6GTMoxGb1f8Ip4uLAvyvmuAxdslN65hMgVK7F8OP.ffWRa',
           role: 'admin'
         }
       }),
@@ -44,7 +44,7 @@ async function seed() {
         data: {
           name: 'Dr. User',
           email: 'doctor@clinic.com',
-          passwordHash: '$2a$12$0i85/Xe1PnhBwOFYL6lFM.8mMTEXgP/SBviU7NOaVPuL1ge52Yowq',
+          passwordHash: '$2a$12$U61M19KUh62LcnllbGsTde7WY6iP7E8VLra3ndQzC95vaiPTbDG/2',
           role: 'doctor'
         }
       }),
@@ -52,7 +52,7 @@ async function seed() {
         data: {
           name: 'Accounting User',
           email: 'accounting@clinic.com',
-          passwordHash: '$2a$12$KPkvT9gHquZn.seqXosG2eRRJVjCUgcIZ9NCqY1E.DcKbodPtWS2O',
+          passwordHash: '$2a$12$ELdZrLAB8ThaZm0Na/Tnp.H0LEipCe1xSO0.JwWznB8r9F4BmLvlW',
           role: 'accounting'
         }
       })

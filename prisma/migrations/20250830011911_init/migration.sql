@@ -230,9 +230,9 @@ ALTER TABLE "audit_logs" ADD CONSTRAINT "audit_logs_actorId_fkey" FOREIGN KEY ("
 
 -- Insert default users
 INSERT INTO "users" ("id", "name", "email", "passwordHash", "role") VALUES 
-('cluipvxxz00003b6g8fz5vzx0', 'Admin User', 'admin@clinic.com', '$2b$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'admin'),
-('cluipvxxz00013b6g8fz5vzx1', 'Dr. Smith', 'doctor@clinic.com', '$2b$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'doctor'),
-('cluipvxxz00023b6g8fz5vzx2', 'John Accountant', 'accounting@clinic.com', '$2b$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'accounting');
+('cluipvxxz00003b6g8fz5vzx0', 'Admin User', 'admin@clinic.com', '$2a$12$OsE.u.t6GTMoxGb1f8Ip4uLAvyvmuAxdslN65hMgVK7F8OP.ffWRa', 'admin'),
+('cluipvxxz00013b6g8fz5vzx1', 'Dr. Smith', 'doctor@clinic.com', '$2a$12$U61M19KUh62LcnllbGsTde7WY6iP7E8VLra3ndQzC95vaiPTbDG/2', 'doctor'),
+('cluipvxxz00023b6g8fz5vzx2', 'John Accountant', 'accounting@clinic.com', '$2a$12$ELdZrLAB8ThaZm0Na/Tnp.H0LEipCe1xSO0.JwWznB8r9F4BmLvlW', 'accounting');
 
 -- Insert default doctor
 INSERT INTO "doctors" ("id", "name", "specialty", "active") VALUES 
