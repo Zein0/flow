@@ -1,0 +1,243 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String   @id @default(cuid())
+  name         String
+  email        String   @unique
+  passwordHash String
+  role         UserRole
+  createdAt    DateTime @default(now())
+
+  createdAppointments Appointment[] @relation("CreatedByUser")
+  createdOrders       Order[]       @relation("CreatedByUser")
+  createdLedgers      Ledger[]      @relation("CreatedByUser")
+  auditLogs           AuditLog[]    @relation("AuditActor")
+
+  @@map("users")
+}
+
+enum UserRole {
+  admin
+  doctor
+  accounting
+}
+
+model Patient {
+  id            String   @id @default(cuid())
+  name          String
+  phone         String?  @unique
+  notes         String?
+  creditBalance Float    @default(0)
+  createdAt     DateTime @default(now())
+
+  appointments Appointment[]
+  orders       Order[]
+  ledgers      Ledger[]
+
+  @@map("patients")
+}
+
+model Doctor {
+  id        String   @id @default(cuid())
+  name      String
+  specialty String?
+  active    Boolean  @default(true)
+  createdAt DateTime @default(now())
+
+  appointments Appointment[]
+  sessionLists SessionList[]
+
+  @@map("doctors")
+}
+
+model SessionType {
+  id              String @id @default(cuid())
+  name            String
+  price           Float
+  durationMinutes Int    @default(60)
+  active          Boolean @default(true)
+
+  appointments  Appointment[]
+  sessionLists  SessionList[]
+
+  @@map("session_types")
+}
+
+model SessionList {
+  id            String @id @default(cuid())
+  doctorId      String
+  sessionTypeId String
+  customPrice   Float?
+
+  doctor      Doctor      @relation(fields: [doctorId], references: [id])
+  sessionType SessionType @relation(fields: [sessionTypeId], references: [id])
+
+  @@unique([doctorId, sessionTypeId])
+  @@map("session_lists")
+}
+
+model Appointment {
+  id            String            @id @default(cuid())
+  patientId     String
+  doctorId      String
+  sessionTypeId String
+  startAt       DateTime
+  endAt         DateTime
+  status        AppointmentStatus @default(scheduled)
+  finalPrice    Float?
+  notes         String?
+  createdBy     String
+  recurrenceId  String?
+  createdAt     DateTime          @default(now())
+
+  patient    Patient     @relation(fields: [patientId], references: [id])
+  doctor     Doctor      @relation(fields: [doctorId], references: [id])
+  sessionType SessionType @relation(fields: [sessionTypeId], references: [id])
+  createdByUser User      @relation("CreatedByUser", fields: [createdBy], references: [id])
+  recurrence Recurrence? @relation(fields: [recurrenceId], references: [id])
+
+  orders    Order[]
+  reminders Reminder[]
+
+  @@map("appointments")
+}
+
+enum AppointmentStatus {
+  scheduled
+  confirmed
+  completed
+  cancelled
+  no_show
+}
+
+model Order {
+  id        String      @id @default(cuid())
+  patientId String
+  appointmentId String?
+  subtotal  Float
+  discount  Float       @default(0)
+  totalDue  Float
+  status    OrderStatus @default(pending)
+  createdBy String
+  createdAt DateTime    @default(now())
+
+  patient       Patient    @relation(fields: [patientId], references: [id])
+  appointment   Appointment? @relation(fields: [appointmentId], references: [id])
+  createdByUser User       @relation("CreatedByUser", fields: [createdBy], references: [id])
+
+  ledgers Ledger[]
+
+  @@map("orders")
+}
+
+enum OrderStatus {
+  pending
+  paid
+  partially_paid
+  cancelled
+}
+
+model Ledger {
+  id         String     @id @default(cuid())
+  patientId  String
+  orderId    String?
+  kind       LedgerKind
+  amount     Float
+  method     PaymentMethod
+  notes      String?
+  createdBy  String
+  occurredAt DateTime   @default(now())
+
+  patient       Patient @relation(fields: [patientId], references: [id])
+  order         Order?  @relation(fields: [orderId], references: [id])
+  createdByUser User    @relation("CreatedByUser", fields: [createdBy], references: [id])
+
+  @@map("ledger")
+}
+
+enum LedgerKind {
+  charge
+  payment
+  credit
+  refund
+  waive
+  return
+}
+
+enum PaymentMethod {
+  cash
+}
+
+model Reminder {
+  id            String        @id @default(cuid())
+  appointmentId String
+  type          ReminderType
+  dueAt         DateTime
+  sentAt        DateTime?
+  status        ReminderStatus @default(pending)
+
+  appointment Appointment @relation(fields: [appointmentId], references: [id])
+
+  @@map("reminders")
+}
+
+enum ReminderType {
+  day_before
+  two_hours_before
+}
+
+enum ReminderStatus {
+  pending
+  sent
+  failed
+}
+
+model Recurrence {
+  id        String   @id @default(cuid())
+  startDate DateTime
+  endDate   DateTime?
+  frequency RecurrenceFrequency @default(weekly)
+  interval  Int      @default(1)
+  createdAt DateTime @default(now())
+
+  appointments Appointment[]
+  exceptions   RecurrenceException[]
+
+  @@map("recurrences")
+}
+
+enum RecurrenceFrequency {
+  weekly
+}
+
+model RecurrenceException {
+  id           String   @id @default(cuid())
+  recurrenceId String
+  exceptionDate DateTime
+  reason       String?
+
+  recurrence Recurrence @relation(fields: [recurrenceId], references: [id])
+
+  @@map("recurrence_exceptions")
+}
+
+model AuditLog {
+  id         String   @id @default(cuid())
+  actorId    String
+  action     String
+  targetType String
+  targetId   String
+  metadata   Json?
+  createdAt  DateTime @default(now())
+
+  actor User @relation("AuditActor", fields: [actorId], references: [id])
+
+  @@map("audit_logs")
+}
