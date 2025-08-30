@@ -239,6 +239,7 @@ async function getAvailability(doctorId, date) {
       doctorId: true
     }
   });
+  console.log('Appointments on', date, appointments);
 
   const availability = [];
   for (let hour = 8; hour < 18; hour++) {
@@ -248,10 +249,14 @@ async function getAvailability(doctorId, date) {
     const globalCount = appointments.filter(apt => 
       apt.startAt.getHours() === hour
     ).length;
+
+    console.log(`Hour ${hour}: globalCount=${globalCount}`);
     
     const doctorBusy = doctorId && appointments.some(apt => 
       apt.doctorId === doctorId && apt.startAt.getHours() === hour
     );
+
+    console.log(`Hour ${hour}: doctorBusy=${doctorBusy}`);
 
     availability.push({
       hour,
