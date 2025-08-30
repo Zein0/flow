@@ -1,12 +1,10 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'react-hot-toast';
-import { useNavigate } from 'react-router-dom';
 import api from '../utils/api';
 import { useAuthStore } from '../stores/auth';
 
 export const useLogin = () => {
   const login = useAuthStore(state => state.login);
-  const navigate = useNavigate();
   
   return useMutation({
     mutationFn: async (credentials) => {
@@ -16,13 +14,6 @@ export const useLogin = () => {
     onSuccess: (data) => {
       login(data);
       toast.success('Logged in successfully');
-      
-      // Redirect admin to dashboard, others to home
-      if (data.user.role === 'admin') {
-        navigate('/dashboard');
-      } else {
-        navigate('/');
-      }
     },
     onError: (error) => {
       toast.error(error.response?.data?.error || 'Login failed');

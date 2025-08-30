@@ -125,7 +125,7 @@ export default function Services() {
             <p className="text-sm">Create your first service to get started.</p>
           </div>
         ) : (
-          <div className="overflow-x-auto">
+          <div className="overflow-x-auto scrollbar-hide" style={{maxWidth: '100vw'}}>
             <table className="min-w-full divide-y divide-gray-200">
               <thead className="bg-gray-50">
                 <tr>

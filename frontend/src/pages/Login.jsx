@@ -1,20 +1,34 @@
 import { useState } from 'react';
-import { Navigate } from 'react-router-dom';
+import { Navigate, useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { useAuthStore } from '../stores/auth';
 import { useLogin } from '../hooks/useAuth';
 
 export default function Login() {
   const isAuthenticated = useAuthStore(state => state.isAuthenticated);
+  const user = useAuthStore(state => state.user);
+  const navigate = useNavigate();
   const login = useLogin();
   const { register, handleSubmit, formState: { errors } } = useForm();
 
   if (isAuthenticated) {
-    return <Navigate to="/" replace />;
+    // Redirect based on user role
+    const redirectPath = user?.role === 'admin' ? '/dashboard' : '/';
+    return <Navigate to={redirectPath} replace />;
   }
 
-  const onSubmit = (data) => {
-    login.mutate(data);
+  const onSubmit = async (data) => {
+    try {
+      const result = await login.mutateAsync(data);
+      // Navigate based on role after successful login
+      if (result.user.role === 'admin') {
+        navigate('/dashboard');
+      } else {
+        navigate('/');
+      }
+    } catch (error) {
+      // Error is handled by the mutation
+    }
   };
 
   return (

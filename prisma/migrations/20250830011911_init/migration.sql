@@ -231,12 +231,12 @@ ALTER TABLE "audit_logs" ADD CONSTRAINT "audit_logs_actorId_fkey" FOREIGN KEY ("
 -- Insert default users
 INSERT INTO "users" ("id", "name", "email", "passwordHash", "role") VALUES 
 ('cluipvxxz00003b6g8fz5vzx0', 'Admin User', 'admin@clinic.com', '$2a$12$OsE.u.t6GTMoxGb1f8Ip4uLAvyvmuAxdslN65hMgVK7F8OP.ffWRa', 'admin'),
-('cluipvxxz00013b6g8fz5vzx1', 'Dr. Smith', 'doctor@clinic.com', '$2a$12$U61M19KUh62LcnllbGsTde7WY6iP7E8VLra3ndQzC95vaiPTbDG/2', 'doctor'),
-('cluipvxxz00023b6g8fz5vzx2', 'John Accountant', 'accounting@clinic.com', '$2a$12$ELdZrLAB8ThaZm0Na/Tnp.H0LEipCe1xSO0.JwWznB8r9F4BmLvlW', 'accounting');
+('cluipvxxz00013b6g8fz5vzx1', 'Doctor', 'doctor@clinic.com', '$2a$12$U61M19KUh62LcnllbGsTde7WY6iP7E8VLra3ndQzC95vaiPTbDG/2', 'doctor'),
+('cluipvxxz00023b6g8fz5vzx2', 'Accountant', 'accounting@clinic.com', '$2a$12$ELdZrLAB8ThaZm0Na/Tnp.H0LEipCe1xSO0.JwWznB8r9F4BmLvlW', 'accounting');
 
 -- Insert default doctor
 INSERT INTO "doctors" ("id", "name", "specialty", "active") VALUES 
-('cluipvxxz00033b6g8fz5vzx3', 'Dr. Smith', 'General Practice', true);
+('cluipvxxz00033b6g8fz5vzx3', 'Doctor', 'General Practice', true);
 
 -- Insert default session type
 INSERT INTO "session_types" ("id", "name", "price", "durationMinutes") VALUES 

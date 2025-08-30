@@ -166,7 +166,7 @@ export default function Reports() {
           </form>
 
           {/* Billing Data Table */}
-          <div className="overflow-x-auto">
+          <div className="overflow-x-auto scrollbar-hide" style={{maxWidth: '100vw'}}>
             {isLoading ? (
               <div className="space-y-2">
                 {[1, 2, 3].map(i => (
@@ -351,7 +351,7 @@ export default function Reports() {
               No outstanding orders
             </div>
           ) : (
-            <div className="overflow-x-auto">
+            <div className="overflow-x-auto scrollbar-hide" style={{maxWidth: '100vw'}}>
               <table className="min-w-full divide-y divide-gray-200">
                 <thead className="bg-gray-50">
                   <tr>
