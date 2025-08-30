@@ -1,17 +1,22 @@
 # Deployment Guide
 
-## Railway Backend Deployment
+## Step 1: Railway Database Project
 
-1. **Create new Railway project**
-2. **Add PostgreSQL database**: Railway → Add Database → PostgreSQL
-3. **Add Redis database**: Railway → Add Database → Redis
-4. **Deploy backend**: Connect your GitHub repo, select `backend` folder
-5. **Set environment variables**:
-   - `DATABASE_URL`: Auto-generated from Railway PostgreSQL
-   - `JWT_SECRET`: Generate a secure random string
-   - `REDIS_HOST`: Auto-generated from Railway Redis
-   - `REDIS_PORT`: Auto-generated from Railway Redis  
-   - `REDIS_PASSWORD`: Auto-generated from Railway Redis
+1. **Create new Railway project** for database
+2. **Add PostgreSQL**: Railway → Add Database → PostgreSQL
+3. **Add Redis**: Railway → Add Database → Redis  
+4. **Copy connection strings** for next step
+
+## Step 2: Railway Backend Project
+
+1. **Create separate Railway project** for backend
+2. **Connect GitHub repo**, select `backend` folder as root directory
+3. **Set environment variables**:
+   - `DATABASE_URL`: PostgreSQL connection string from Step 1
+   - `JWT_SECRET`: Generate secure random string (32+ chars)
+   - `REDIS_HOST`: Redis host from Step 1
+   - `REDIS_PORT`: Redis port from Step 1
+   - `REDIS_PASSWORD`: Redis password from Step 1
    - `USE_REDIS`: `true`
    - `PORT`: `3001`
 

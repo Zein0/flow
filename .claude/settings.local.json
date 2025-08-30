@@ -11,7 +11,8 @@
       "Bash(rm:*)",
       "Bash(npm run build:*)",
       "Bash(npm test)",
-      "Bash(npm run test:*)"
+      "Bash(npm run test:*)",
+      "Bash(mv:*)"
     ],
     "deny": []
   }

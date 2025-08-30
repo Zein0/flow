@@ -30,16 +30,33 @@ async function seed() {
       })
     ]);
 
-    // Create admin user
-    const adminPassword = await bcrypt.hash('admin123', 12);
-    const adminUser = await prisma.user.create({
-      data: {
-        name: 'Admin User',
-        email: 'admin@clinic.com',
-        passwordHash: adminPassword,
-        role: 'admin'
-      }
-    });
+    // Create users with secure passwords
+    const users = await Promise.all([
+      prisma.user.create({
+        data: {
+          name: 'Admin User',
+          email: 'admin@clinic.com',
+          passwordHash: '$2a$12$aBUTJTnjUhiJXs4b/LOAOOix6FKLDuozzy5vTAuU10BP3TdXYslOu',
+          role: 'admin'
+        }
+      }),
+      prisma.user.create({
+        data: {
+          name: 'Dr. User',
+          email: 'doctor@clinic.com',
+          passwordHash: '$2a$12$mXXrDqYfR/44ymIpnZaIs.QzzxJY7o7jBjlpkdknjIIY2IEyYp6DS',
+          role: 'doctor'
+        }
+      }),
+      prisma.user.create({
+        data: {
+          name: 'Accounting User',
+          email: 'accounting@clinic.com',
+          passwordHash: '$2a$12$AV6rqq9tF6SQSULsd9UpUejxL/0SNC/MGD5svP1RXVC4ntiqxYdbK',
+          role: 'accounting'
+        }
+      })
+    ]);
 
     // Create sample doctors
     const doctors = await Promise.all([
@@ -143,7 +160,8 @@ async function seed() {
     ]);
 
     console.log('Seed data created successfully!');
-    console.log('Admin login: admin@clinic.com / admin123');
+    console.log('Users created with secure passwords - check CREDENTIALS.md');
+    console.log(`Created ${users.length} users`);
     console.log(`Created ${sessionTypes.length} session types`);
     console.log(`Created ${doctors.length} doctors`);
     console.log(`Created ${patients.length} patients`);
