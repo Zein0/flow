@@ -4,7 +4,7 @@
   "description": "Backend for appointment and billing management system",
   "main": "src/index.js",
   "scripts": {
-    "start": "node src/index.js",
+    "start": "npx prisma migrate deploy && node src/index.js",
     "dev": "nodemon src/index.js",
     "migrate": "prisma migrate deploy",
     "db:push": "prisma db push",
