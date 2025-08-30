@@ -39,7 +39,7 @@ export default function Login() {
             Sign in to your account
           </h2>
         </div>
-        <form className="mt-8 space-y-6" onSubmit={handleSubmit(onSubmit)}>
+        <form className="mt-8 space-y-6" onSubmit={handleSubmit(onSubmit)} autoComplete="on">
           <div className="space-y-4">
             <div>
               <label htmlFor="email" className="block text-sm font-medium text-gray-700">
@@ -54,6 +54,9 @@ export default function Login() {
                   }
                 })}
                 type="email"
+                name="email"
+                id="email"
+                autoComplete="email"
                 className="input mt-1"
                 placeholder="Enter your email"
               />
@@ -74,6 +77,9 @@ export default function Login() {
                   }
                 })}
                 type="password"
+                name="password"
+                id="password"
+                autoComplete="current-password"
                 className="input mt-1"
                 placeholder="Enter your password"
               />

@@ -164,7 +164,7 @@ export default function PatientDetail() {
           </div>
         </div>
         
-        <div className="flex space-x-3 mt-4 sm:mt-0">
+        <div className="flex flex-col sm:flex-row justify-center sm:justify-start space-y-2 sm:space-y-0 sm:space-x-3 mt-4 sm:mt-0">
           <button
             onClick={() => setShowPaymentForm(true)}
             className="btn-primary"

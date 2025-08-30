@@ -108,7 +108,10 @@ export default function Services() {
           </p>
         </div>
         <button
-          onClick={() => setShowModal(true)}
+          onClick={() => {
+            reset({ name: '', price: '', durationMinutes: 60 });
+            setShowModal(true);
+          }}
           className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
         >
           <PlusIcon className="h-4 w-4 mr-2" />
@@ -258,12 +261,11 @@ export default function Services() {
                   Duration (minutes) *
                 </label>
                 <input
-                  {...register('durationMinutes', { 
-                    required: 'Duration is required',
-                    min: { value: 1, message: 'Duration must be at least 1 minute' }
-                  })}
+                  {...register('durationMinutes')}
                   type="number"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
+                  value={60}
+                  disabled
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-100 text-gray-500 cursor-not-allowed"
                   placeholder="60"
                 />
                 {errors.durationMinutes && (
