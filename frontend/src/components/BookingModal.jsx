@@ -10,6 +10,7 @@ import { usePatients, useCreatePatient } from '../hooks/usePatients';
 export default function BookingModal() {
   const isOpen = useUIStore(state => state.bookingModalOpen);
   const selectedDate = useUIStore(state => state.selectedDate);
+  const setSelectedDate = useUIStore(state => state.setSelectedDate);
   const setBookingModalOpen = useUIStore(state => state.setBookingModalOpen);
   
   const [patientQuery, setPatientQuery] = useState('');
@@ -17,6 +18,7 @@ export default function BookingModal() {
 
   const { data: patients = [] } = usePatients(patientQuery);
   const { data: availableDoctors = [] } = useAvailableDoctors(selectedDate, selectedDate?.getHours());
+  const timeSlots = Array.from({ length: 10 }, (_, i) => i + 8);
   const createAppointment = useCreateAppointment();
   const createPatient = useCreatePatient();
 
@@ -119,10 +121,38 @@ export default function BookingModal() {
                   </button>
                 </div>
 
-                <div className="mb-6 p-4 bg-gradient-to-r from-primary-50 to-blue-50 rounded-lg border border-primary-100">
-                  <p className="text-sm font-medium text-primary-900">
-                    {format(selectedDate, 'EEEE, MMMM do, yyyy')} at {format(selectedDate, 'h:mm a')}
-                  </p>
+                <div className="mb-6 grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Date</label>
+                    <input
+                      type="date"
+                      value={format(selectedDate, 'yyyy-MM-dd')}
+                      onChange={(e) => {
+                        const newDate = new Date(e.target.value);
+                        newDate.setHours(selectedDate.getHours(), 0, 0, 0);
+                        setSelectedDate(newDate);
+                      }}
+                      className="input"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Time</label>
+                    <select
+                      value={selectedDate.getHours()}
+                      onChange={(e) => {
+                        const newDate = new Date(selectedDate);
+                        newDate.setHours(parseInt(e.target.value), 0, 0, 0);
+                        setSelectedDate(newDate);
+                      }}
+                      className="input"
+                    >
+                      {timeSlots.map(hour => (
+                        <option key={hour} value={hour}>
+                          {format(new Date().setHours(hour, 0, 0, 0), 'h:mm a')}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
                 </div>
 
                 <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">

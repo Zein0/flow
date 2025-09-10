@@ -1,27 +1,34 @@
 import { useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { format } from 'date-fns';
-import { 
-  CurrencyDollarIcon, 
-  CalendarDaysIcon,
-  PlusIcon,
+import {
+  CurrencyDollarIcon,
   XMarkIcon,
   MinusIcon,
-  ArrowDownTrayIcon
+  ArrowDownTrayIcon,
+  TrashIcon
 } from '@heroicons/react/24/outline';
-import { usePatient } from '../hooks/usePatients';
+import { usePatient, useDeleteFutureAppointments } from '../hooks/usePatients';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'react-hot-toast';
 import { useForm } from 'react-hook-form';
 import api from '../utils/api';
+import AppointmentDetailModal from '../components/AppointmentDetailModal';
+import { useAuthStore } from '../stores/auth';
 
 export default function PatientDetail() {
   const { patientId } = useParams();
   const [showPaymentForm, setShowPaymentForm] = useState(false);
   const [showWaiveForm, setShowWaiveForm] = useState(false);
   const [showReturnForm, setShowReturnForm] = useState(false);
+  const [selectedAppointment, setSelectedAppointment] = useState(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const { data: patient, isLoading } = usePatient(patientId);
   const queryClient = useQueryClient();
+  const deleteFutureAppointments = useDeleteFutureAppointments();
+  const user = useAuthStore(state => state.user);
+  const isAdmin = user?.role === 'admin';
   
   const { register, handleSubmit, reset, formState: { errors } } = useForm();
   const { register: registerWaive, handleSubmit: handleWaiveSubmit, reset: resetWaive, formState: { errors: waiveErrors } } = useForm();
@@ -136,9 +143,14 @@ export default function PatientDetail() {
     );
   }
 
-  const outstandingOrders = patient.orders?.filter(order => 
+  const outstandingOrders = patient.orders?.filter(order =>
     order.status === 'pending' || order.status === 'partially_paid'
   ) || [];
+
+  const appointments = patient.appointments || [];
+  const appointmentsPerPage = 5;
+  const totalPages = Math.max(1, Math.ceil(appointments.length / appointmentsPerPage));
+  const paginatedAppointments = appointments.slice((currentPage - 1) * appointmentsPerPage, currentPage * appointmentsPerPage);
 
   return (
     <div className="space-y-6">
@@ -190,6 +202,15 @@ export default function PatientDetail() {
               Return Money
             </button>
           )}
+          {isAdmin && (
+            <button
+              onClick={() => setShowDeleteDialog(true)}
+              className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+            >
+              <TrashIcon className="w-4 h-4 mr-2" />
+              Delete Future Appointments
+            </button>
+          )}
         </div>
       </div>
 
@@ -201,37 +222,62 @@ export default function PatientDetail() {
               <h3 className="text-lg font-medium text-gray-900">Appointments</h3>
             </div>
             <div className="card-body p-0">
-              {patient.appointments?.length === 0 ? (
+              {appointments.length === 0 ? (
                 <div className="p-6 text-center text-gray-500">
                   No appointments scheduled
                 </div>
               ) : (
-                <div className="divide-y divide-gray-200">
-                  {patient.appointments?.map(appointment => (
-                    <div key={appointment.id} className="p-4">
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <p className="text-sm font-medium text-gray-900">
-                            {format(new Date(appointment.startAt), 'MMM do, yyyy')} at{' '}
-                            {format(new Date(appointment.startAt), 'h:mm a')}
-                          </p>
-                          <p className="text-sm text-gray-500">
-                            Dr. {appointment.doctor.name} • {appointment.sessionType.name}
-                          </p>
+                <>
+                  <div className="divide-y divide-gray-200">
+                    {paginatedAppointments.map(appointment => (
+                      <div
+                        key={appointment.id}
+                        className="p-4 cursor-pointer hover:bg-gray-50"
+                        onClick={() => setSelectedAppointment(appointment)}
+                      >
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <p className="text-sm font-medium text-gray-900">
+                              {format(new Date(appointment.startAt), 'MMM do, yyyy')} at{' '}
+                              {format(new Date(appointment.startAt), 'h:mm a')}
+                            </p>
+                            <p className="text-sm text-gray-500">
+                              Dr. {appointment.doctor.name} • {appointment.sessionType.name}
+                            </p>
+                          </div>
+                          <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+                            appointment.status === 'confirmed'
+                              ? 'bg-green-100 text-green-800'
+                              : appointment.status === 'cancelled'
+                              ? 'bg-red-100 text-red-800'
+                              : 'bg-blue-100 text-blue-800'
+                          }`}>
+                            {appointment.status}
+                          </span>
                         </div>
-                        <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
-                          appointment.status === 'confirmed' 
-                            ? 'bg-green-100 text-green-800' 
-                            : appointment.status === 'cancelled'
-                            ? 'bg-red-100 text-red-800'
-                            : 'bg-blue-100 text-blue-800'
-                        }`}>
-                          {appointment.status}
-                        </span>
                       </div>
+                    ))}
+                  </div>
+                  {totalPages > 1 && (
+                    <div className="flex items-center justify-between p-4">
+                      <button
+                        onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                        disabled={currentPage === 1}
+                        className="btn-secondary"
+                      >
+                        Previous
+                      </button>
+                      <span className="text-sm text-gray-500">Page {currentPage} of {totalPages}</span>
+                      <button
+                        onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                        disabled={currentPage === totalPages}
+                        className="btn-secondary"
+                      >
+                        Next
+                      </button>
                     </div>
-                  )) || []}
-                </div>
+                  )}
+                </>
               )}
             </div>
           </div>
@@ -369,6 +415,13 @@ export default function PatientDetail() {
           </div>
         </div>
       </div>
+
+      {selectedAppointment && (
+        <AppointmentDetailModal
+          appointment={selectedAppointment}
+          onClose={() => setSelectedAppointment(null)}
+        />
+      )}
 
       {/* Payment Modal */}
       {showPaymentForm && (
@@ -644,6 +697,46 @@ export default function PatientDetail() {
                       </button>
                     </div>
                   </form>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showDeleteDialog && (
+        <div className="fixed inset-0 z-50 overflow-y-auto">
+          <div className="flex min-h-full items-center justify-center p-4 text-center">
+            <div className="fixed inset-0 bg-gray-500 bg-opacity-75" onClick={() => setShowDeleteDialog(false)} />
+            <div className="relative transform overflow-hidden rounded-2xl bg-white px-4 pt-5 pb-4 text-left shadow-xl sm:my-8 sm:w-full sm:max-w-md sm:p-6">
+              <div className="sm:flex sm:items-start">
+                <div className="mt-3 text-center sm:mt-0 sm:text-left w-full">
+                  <h3 className="text-lg font-medium leading-6 text-gray-900 mb-4">
+                    Delete Future Appointments
+                  </h3>
+                  <p className="text-sm text-gray-500 mb-4">
+                    Are you sure you want to delete all future appointments for this patient? This action cannot be undone.
+                  </p>
+                  <div className="flex justify-end space-x-3">
+                    <button
+                      type="button"
+                      onClick={() => setShowDeleteDialog(false)}
+                      className="btn-secondary"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="button"
+                      onClick={async () => {
+                        await deleteFutureAppointments.mutateAsync(patientId);
+                        setShowDeleteDialog(false);
+                      }}
+                      disabled={deleteFutureAppointments.isPending}
+                      className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 disabled:opacity-50"
+                    >
+                      {deleteFutureAppointments.isPending ? 'Deleting...' : 'Delete'}
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
