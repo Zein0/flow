@@ -728,8 +728,13 @@ export default function PatientDetail() {
                     <button
                       type="button"
                       onClick={async () => {
-                        await deleteFutureAppointments.mutateAsync(patientId);
-                        setShowDeleteDialog(false);
+                        try {
+                          await deleteFutureAppointments.mutateAsync(patientId);
+                          setShowDeleteDialog(false);
+                        } catch (error) {
+                          console.error('Failed to delete future appointments:', error);
+                          alert('Failed to delete future appointments');
+                        }
                       }}
                       disabled={deleteFutureAppointments.isPending}
                       className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 disabled:opacity-50"

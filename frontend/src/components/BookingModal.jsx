@@ -26,9 +26,7 @@ export default function BookingModal() {
     defaultValues: {
       doctorId: '',
       sessionTypeId: '',
-      notes: '',
-      recurrence: false,
-      endDate: ''
+      notes: ''
     }
   });
 
@@ -39,7 +37,7 @@ export default function BookingModal() {
     ? patients
     : patients.filter(patient =>
         patient.name.toLowerCase().includes(patientQuery.toLowerCase()) ||
-        patient.phone?.includes(patientQuery) || true
+        patient.phone?.includes(patientQuery)
       );
 
   const onClose = () => {
@@ -72,12 +70,6 @@ export default function BookingModal() {
       };
 
       await createAppointment.mutateAsync(appointmentData);
-      
-      // Handle recurrence if selected
-      if (data.recurrence && data.endDate) {
-        // TODO: Implement recurrence creation
-        console.log('Creating recurrence until', data.endDate);
-      }
 
       onClose();
     } catch (error) {
@@ -332,37 +324,6 @@ export default function BookingModal() {
                       rows={3}
                       placeholder="Appointment notes"
                     />
-                  </div>
-
-                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                    <div className="flex items-center space-x-2">
-                      <input
-                        type="checkbox"
-                        {...register('recurrence')}
-                        className="rounded border-gray-300 text-primary-600 focus:ring-primary-500"
-                      />
-                      <label className="text-sm text-gray-700">
-                        Reserve always (weekly recurrence)
-                      </label>
-                    </div>
-
-                    {watch('recurrence') && (
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                          End Date
-                        </label>
-                        <input
-                          {...register('endDate', { 
-                            required: watch('recurrence') ? 'End date is required for recurrence' : false 
-                          })}
-                          type="date"
-                          className="input"
-                        />
-                        {errors.endDate && (
-                          <p className="mt-1 text-sm text-red-600">{errors.endDate.message}</p>
-                        )}
-                      </div>
-                    )}
                   </div>
 
                   <div className="flex flex-col sm:flex-row justify-end space-y-2 sm:space-y-0 sm:space-x-3 pt-4">
