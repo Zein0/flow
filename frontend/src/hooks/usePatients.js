@@ -81,3 +81,21 @@ export const useRecordPayment = () => {
     }
   });
 };
+
+export const useDeleteFutureAppointments = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (patientId) => {
+      const response = await api.delete(`/patients/${patientId}/appointments/future`);
+      return response.data;
+    },
+    onSuccess: (data, patientId) => {
+      queryClient.invalidateQueries({ queryKey: ['patient', patientId] });
+      toast.success('Future appointments deleted');
+    },
+    onError: (error) => {
+      toast.error(error.response?.data?.error || 'Failed to delete appointments');
+    }
+  });
+};

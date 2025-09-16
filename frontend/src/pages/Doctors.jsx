@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { PlusIcon, UserIcon, TrashIcon, PencilIcon } from '@heroicons/react/24/outline';
 import { useDoctors, useCreateDoctor, useUpdateDoctor, useAddDoctorSession, useUpdateDoctorSession, useDeleteDoctorSession } from '../hooks/useDoctors';
+import { useSessionTypes } from '../hooks/useSessionTypes';
 import { useAuthStore } from '../stores/auth';
 import { useForm } from 'react-hook-form';
 import { useQueryClient } from '@tanstack/react-query';
@@ -24,12 +25,7 @@ export default function Doctors() {
   const { register, handleSubmit, reset, setValue, formState: { errors } } = useForm();
   const { register: registerSession, handleSubmit: handleSessionSubmit, reset: resetSession, setValue: setSessionValue, formState: { errors: sessionErrors } } = useForm();
 
-  // Use actual session type IDs from database
-  const sessionTypes = [
-    { id: 'cmexe8yrf0000fwe7goopy5qg', name: 'Follow-up', defaultPrice: 100 },
-    { id: 'cmexe8yrm0002fwe7tx5ljdrc', name: 'Consultation', defaultPrice: 150 },
-    { id: 'cmexe8yrm0001fwe78hdk4aw8', name: 'Procedure', defaultPrice: 300 }
-  ];
+  const { data: sessionTypes = [] } = useSessionTypes();
 
   const onSubmit = async (data) => {
     try {
@@ -297,7 +293,7 @@ export default function Doctors() {
                     onChange={(e) => {
                       const selectedType = sessionTypes.find(type => type.id === e.target.value);
                       if (selectedType) {
-                        setSessionValue('customPrice', selectedType.defaultPrice);
+                        setSessionValue('customPrice', selectedType.price);
                       }
                       registerSession('sessionTypeId').onChange(e);
                     }}
@@ -307,7 +303,7 @@ export default function Doctors() {
                       .filter(type => !managingSessions.sessionLists?.some(sl => sl.sessionTypeId === type.id))
                       .map(type => (
                         <option key={type.id} value={type.id}>
-                          {type.name} (Default: ${type.defaultPrice})
+                          {type.name} (Default: ${type.price})
                         </option>
                       ))
                     }

@@ -1,7 +1,7 @@
 const express = require('express');
 const { PrismaClient } = require('@prisma/client');
 const { body, validationResult, query } = require('express-validator');
-const { requireAuth } = require('../middleware/auth');
+const { requireAuth, requireAdmin } = require('../middleware/auth');
 const { recordPayment, getPatientBalance } = require('../services/ledger');
 
 const router = express.Router();
@@ -175,6 +175,33 @@ router.post('/:id/payments', requireAuth, [
 
     res.status(201).json(payment);
   } catch (error) {
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+router.delete('/:id/appointments/future', requireAdmin, async (req, res) => {
+  try {
+    const now = new Date();
+    const deleted = await prisma.appointment.deleteMany({
+      where: {
+        patientId: req.params.id,
+        startAt: { gt: now }
+      }
+    });
+
+    await prisma.auditLog.create({
+      data: {
+        actorId: req.user.id,
+        action: 'patient.delete_future_appointments',
+        targetType: 'patient',
+        targetId: req.params.id,
+        metadata: { count: deleted.count }
+      }
+    });
+
+    res.json({ deleted: deleted.count });
+  } catch (error) {
+    console.error('Delete future appointments error:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 });
