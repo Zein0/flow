@@ -2,9 +2,9 @@ import { Fragment, useState } from 'react';
 import { Dialog, Transition, Combobox } from '@headlessui/react';
 import { XMarkIcon, CheckIcon, ChevronUpDownIcon } from '@heroicons/react/24/outline';
 import { useForm, Controller } from 'react-hook-form';
-import { format } from 'date-fns';
+import { format, addYears } from 'date-fns';
 import { useUIStore } from '../stores/ui';
-import { useCreateAppointment, useAvailableDoctors } from '../hooks/useAppointments';
+import { useCreateAppointment, useCreateRecurrence, useAvailableDoctors } from '../hooks/useAppointments';
 import { usePatients, useCreatePatient } from '../hooks/usePatients';
 
 export default function BookingModal() {
@@ -20,17 +20,20 @@ export default function BookingModal() {
   const { data: availableDoctors = [] } = useAvailableDoctors(selectedDate, selectedDate?.getHours());
   const timeSlots = Array.from({ length: 10 }, (_, i) => i + 8);
   const createAppointment = useCreateAppointment();
+  const createRecurrence = useCreateRecurrence();
   const createPatient = useCreatePatient();
 
   const { register, handleSubmit, control, reset, watch, formState: { errors } } = useForm({
     defaultValues: {
       doctorId: '',
       sessionTypeId: '',
-      notes: ''
+      notes: '',
+      isRecurring: false
     }
   });
 
   const selectedDoctorId = watch('doctorId');
+  const isRecurring = watch('isRecurring');
   const selectedDoctorData = availableDoctors.find(d => d.id === selectedDoctorId);
 
   const filteredPatients = patientQuery === ''
@@ -50,7 +53,7 @@ export default function BookingModal() {
   const onSubmit = async (data) => {
     try {
       let patientId = data.patientId;
-      
+
       // Create new patient if needed
       if (showNewPatientForm) {
         const newPatient = await createPatient.mutateAsync({
@@ -61,15 +64,31 @@ export default function BookingModal() {
         patientId = newPatient.id;
       }
 
-      const appointmentData = {
-        patientId,
-        doctorId: data.doctorId,
-        sessionTypeId: data.sessionTypeId,
-        startAt: selectedDate.toISOString(),
-        notes: data.notes
-      };
+      if (data.isRecurring) {
+        // Create recurring appointments for one year
+        const endDate = addYears(selectedDate, 1);
+        const recurrenceData = {
+          patientId,
+          doctorId: data.doctorId,
+          sessionTypeId: data.sessionTypeId,
+          startAt: selectedDate.toISOString(),
+          endDate: endDate.toISOString(),
+          notes: data.notes
+        };
 
-      await createAppointment.mutateAsync(appointmentData);
+        await createRecurrence.mutateAsync(recurrenceData);
+      } else {
+        // Create single appointment
+        const appointmentData = {
+          patientId,
+          doctorId: data.doctorId,
+          sessionTypeId: data.sessionTypeId,
+          startAt: selectedDate.toISOString(),
+          notes: data.notes
+        };
+
+        await createAppointment.mutateAsync(appointmentData);
+      }
 
       onClose();
     } catch (error) {
@@ -326,6 +345,25 @@ export default function BookingModal() {
                     />
                   </div>
 
+                  <div className="flex items-start">
+                    <div className="flex items-center h-5">
+                      <input
+                        id="isRecurring"
+                        {...register('isRecurring')}
+                        type="checkbox"
+                        className="h-4 w-4 rounded border-gray-300 text-primary-600 focus:ring-primary-500"
+                      />
+                    </div>
+                    <div className="ml-3 text-sm">
+                      <label htmlFor="isRecurring" className="font-medium text-gray-700">
+                        Recurring appointment
+                      </label>
+                      <p className="text-gray-500">
+                        Schedule weekly for one year (skips weeks when doctor is unavailable)
+                      </p>
+                    </div>
+                  </div>
+
                   <div className="flex flex-col sm:flex-row justify-end space-y-2 sm:space-y-0 sm:space-x-3 pt-4">
                     <button
                       type="button"
@@ -336,10 +374,12 @@ export default function BookingModal() {
                     </button>
                     <button
                       type="submit"
-                      disabled={createAppointment.isPending}
+                      disabled={createAppointment.isPending || createRecurrence.isPending}
                       className="btn-primary order-1 sm:order-2"
                     >
-                      {createAppointment.isPending ? 'Booking...' : 'Book Appointment'}
+                      {(createAppointment.isPending || createRecurrence.isPending)
+                        ? (isRecurring ? 'Creating recurring appointments...' : 'Booking...')
+                        : (isRecurring ? 'Book Recurring Appointments' : 'Book Appointment')}
                     </button>
                   </div>
                 </form>

@@ -123,7 +123,7 @@ export const useCancelAppointment = () => {
 
 export const useUpdateAppointmentStatus = () => {
   const queryClient = useQueryClient();
-  
+
   return useMutation({
     mutationFn: async ({ appointmentId, status }) => {
       const response = await api.put(`/appointments/${appointmentId}/status`, {
@@ -137,6 +137,32 @@ export const useUpdateAppointmentStatus = () => {
     },
     onError: (error) => {
       toast.error(error.response?.data?.error || 'Failed to update status');
+    }
+  });
+};
+
+export const useCreateRecurrence = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (recurrenceData) => {
+      const response = await api.post('/recurrences', recurrenceData);
+      return response.data;
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ['appointments'] });
+      queryClient.invalidateQueries({ queryKey: ['availability'] });
+      const createdCount = data.createdCount || 0;
+      const conflictsCount = data.conflicts?.length || 0;
+
+      if (conflictsCount > 0) {
+        toast.success(`Created ${createdCount} recurring appointments. ${conflictsCount} skipped due to conflicts.`, { duration: 5000 });
+      } else {
+        toast.success(`Created ${createdCount} recurring appointments successfully`);
+      }
+    },
+    onError: (error) => {
+      toast.error(error.response?.data?.error || 'Failed to create recurring appointments');
     }
   });
 };
