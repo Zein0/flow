@@ -147,10 +147,15 @@ export default function PatientDetail() {
     order.status === 'pending' || order.status === 'partially_paid'
   ) || [];
 
-  const appointments = patient.appointments || [];
-  const appointmentsPerPage = 5;
-  const totalPages = Math.max(1, Math.ceil(appointments.length / appointmentsPerPage));
-  const paginatedAppointments = appointments.slice((currentPage - 1) * appointmentsPerPage, currentPage * appointmentsPerPage);
+  // Filter for future appointments only
+  const now = new Date();
+  const futureAppointments = patient.appointments?.filter(appointment =>
+    new Date(appointment.startAt) >= now
+  ) || [];
+
+  const appointmentsPerPage = 10;
+  const totalPages = Math.max(1, Math.ceil(futureAppointments.length / appointmentsPerPage));
+  const paginatedAppointments = futureAppointments.slice((currentPage - 1) * appointmentsPerPage, currentPage * appointmentsPerPage);
 
   return (
     <div className="space-y-6">
@@ -219,12 +224,12 @@ export default function PatientDetail() {
           {/* Appointments */}
           <div className="card">
             <div className="card-header">
-              <h3 className="text-lg font-medium text-gray-900">Appointments</h3>
+              <h3 className="text-lg font-medium text-gray-900">Next Appointments</h3>
             </div>
             <div className="card-body p-0">
-              {appointments.length === 0 ? (
+              {futureAppointments.length === 0 ? (
                 <div className="p-6 text-center text-gray-500">
-                  No appointments scheduled
+                  No upcoming appointments
                 </div>
               ) : (
                 <>
