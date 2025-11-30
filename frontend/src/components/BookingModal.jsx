@@ -63,7 +63,8 @@ export default function BookingModal() {
         const newPatient = await createPatient.mutateAsync({
           name: data.newPatientName,
           phone: data.newPatientPhone,
-          notes: data.newPatientNotes
+          notes: data.newPatientNotes,
+          insurance: data.newPatientInsurance || false
         });
         patientId = newPatient.id;
       }
@@ -272,6 +273,17 @@ export default function BookingModal() {
                           rows={2}
                           placeholder="Notes"
                         />
+                        <div className="flex items-center">
+                          <input
+                            {...register('newPatientInsurance')}
+                            type="checkbox"
+                            id="newPatientInsurance"
+                            className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
+                          />
+                          <label htmlFor="newPatientInsurance" className="ml-2 block text-sm text-gray-700">
+                            Has Insurance Coverage
+                          </label>
+                        </div>
                       </div>
                     )}
 
