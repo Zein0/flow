@@ -200,9 +200,9 @@ export default function PatientDetail() {
           <h1 className="text-2xl font-bold text-gray-900">{patient.name}</h1>
           <div className="mt-1 flex items-center space-x-4 text-sm">
             {patient.phone && <span className="text-gray-500">{patient.phone}</span>}
-            {totalServiceCredits > 0 && (
+            {patient.creditsSummary && patient.creditsSummary.length > 0 && (
               <span className="font-medium text-indigo-600">
-                Service Credits: {totalServiceCredits}
+                {patient.creditsSummary.map(c => `${c.quantity}x ${c.sessionTypeName}`).join(', ')}
               </span>
             )}
             <span className={`font-medium ${patient.creditBalance > 0 ? 'text-green-600' : 'text-gray-500'}`}>
@@ -309,24 +309,6 @@ export default function PatientDetail() {
         </div>
       </div>
 
-      {/* Service Credits Section */}
-      {patient.creditsSummary && patient.creditsSummary.length > 0 && (
-        <div className="card bg-gradient-to-r from-indigo-50 to-purple-50">
-          <div className="card-header">
-            <h3 className="text-lg font-medium text-gray-900">Service Credits Breakdown</h3>
-          </div>
-          <div className="card-body">
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
-              {patient.creditsSummary.map(credit => (
-                <div key={credit.sessionTypeId} className="bg-white rounded-lg p-4 shadow-sm">
-                  <p className="text-2xl font-bold text-indigo-600">{credit.quantity}x</p>
-                  <p className="text-sm text-gray-600 mt-1">{credit.sessionTypeName}</p>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      )}
 
       <div className="grid gap-6 lg:grid-cols-3">
         <div className="lg:col-span-2 space-y-6">
