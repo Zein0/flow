@@ -75,20 +75,20 @@ export default function CalendarGrid() {
           )}
         </h3>
       </div>
-      <div className="card-body p-0 overflow-x-auto">
-        <div className="divide-y divide-gray-200 min-w-[640px]">
+      <div className="card-body p-0">
+        <div className="divide-y divide-gray-200">
           {timeSlots.map(({ hour, minute }) => {
             const appointmentsStartingHere = getAppointmentsStartingAtSlot(hour, minute);
             const slotAvailability = getAvailabilityForSlot(hour, minute);
             const isAvailable = slotAvailability.available;
 
             return (
-              <div key={`${hour}-${minute}`} className="flex items-stretch min-h-[4rem] hover:bg-gray-50">
-                <div className="w-16 sm:w-20 px-2 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm font-medium text-gray-500 border-r border-gray-200 flex items-start">
+              <div key={`${hour}-${minute}`} className="flex items-stretch min-h-[3rem] sm:min-h-[4rem] hover:bg-gray-50">
+                <div className="w-14 sm:w-20 px-2 sm:px-4 py-1.5 sm:py-3 text-xs sm:text-sm font-medium text-gray-500 border-r border-gray-200 flex items-start">
                   {format(new Date().setHours(hour, minute, 0, 0), 'h:mm a')}
                 </div>
 
-                <div className="flex-1 px-2 sm:px-4 py-2 sm:py-3">
+                <div className="flex-1 px-2 sm:px-4 py-1.5 sm:py-3">
                   {appointmentsStartingHere.length > 0 ? (
                     <div className="space-y-2">
                       {appointmentsStartingHere.map(appointment => {
@@ -97,7 +97,7 @@ export default function CalendarGrid() {
                         return (
                           <div
                             key={appointment.id}
-                            className={`p-2 sm:p-3 rounded-lg border ${
+                            className={`p-1.5 sm:p-3 rounded-lg border ${
                               appointment.status === 'confirmed'
                                 ? 'bg-green-50 border-green-200'
                                 : appointment.status === 'cancelled'
@@ -105,21 +105,21 @@ export default function CalendarGrid() {
                                 : 'bg-blue-50 border-blue-200'
                             }`}
                           >
-                            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1 sm:gap-2">
                               <div className="flex-1 min-w-0">
-                                <p className="text-sm font-medium text-gray-900 truncate">
+                                <p className="text-xs sm:text-sm font-medium text-gray-900 truncate">
                                   {appointment.patient.name}
                                 </p>
                                 <p className="text-xs text-gray-500 truncate">
                                   Dr. {appointment.doctor.name} • {appointment.sessionType.name}
                                 </p>
-                                <p className="text-xs text-gray-400 mt-1">
+                                <p className="text-xs text-gray-400 mt-0.5 sm:mt-1">
                                   {format(new Date(appointment.startAt), 'h:mm a')} - {format(new Date(appointment.endAt), 'h:mm a')}
                                   {duration === 60 && <span className="ml-1">(60 min)</span>}
                                   {duration === 30 && <span className="ml-1">(30 min)</span>}
                                 </p>
                               </div>
-                              <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium flex-shrink-0 self-start sm:self-auto ${
+                              <span className={`inline-flex items-center px-2 py-0.5 sm:py-1 rounded-full text-xs font-medium flex-shrink-0 self-start sm:self-auto ${
                                 appointment.status === 'confirmed'
                                   ? 'bg-green-100 text-green-800'
                                   : appointment.status === 'cancelled'
