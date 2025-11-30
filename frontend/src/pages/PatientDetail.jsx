@@ -194,35 +194,128 @@ export default function PatientDetail() {
   const totalServiceCredits = patient.creditsSummary?.reduce((sum, credit) => sum + credit.quantity, 0) || 0;
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">{patient.name}</h1>
-          <div className="mt-1 flex items-center space-x-4 text-sm">
-            {patient.phone && <span className="text-gray-500">{patient.phone}</span>}
-            {patient.creditsSummary && patient.creditsSummary.length > 0 && (
-              <span className="font-medium text-indigo-600">
-                {patient.creditsSummary.map(c => `${c.quantity}x ${c.sessionTypeName}`).join(', ')}
-              </span>
+    <div className="space-y-4 sm:space-y-6">
+      <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
+        <div className="flex-1 min-w-0">
+          <div className="flex items-start justify-between">
+            <h1 className="text-xl sm:text-2xl font-bold text-gray-900 truncate">{patient.name}</h1>
+            <div className="relative ml-2 sm:hidden">
+              <button
+                onClick={() => setShowActionsMenu(!showActionsMenu)}
+                className="inline-flex items-center px-3 py-1.5 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
+              >
+                Actions
+                <ChevronDownIcon className="ml-1 -mr-0.5 h-4 w-4" />
+              </button>
+
+              {showActionsMenu && (
+                <>
+                  <div
+                    className="fixed inset-0 z-10"
+                    onClick={() => setShowActionsMenu(false)}
+                  />
+                  <div className="absolute right-0 z-20 mt-2 w-56 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5">
+                    <div className="py-1" role="menu">
+                      <button
+                        onClick={() => {
+                          setShowPaymentForm(true);
+                          setShowActionsMenu(false);
+                        }}
+                        className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                      >
+                        <CurrencyDollarIcon className="w-4 h-4 mr-3" />
+                        Record Payment
+                      </button>
+
+                      <button
+                        onClick={() => {
+                          setShowBundleForm(true);
+                          setShowActionsMenu(false);
+                        }}
+                        className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                      >
+                        <CubeIcon className="w-4 h-4 mr-3" />
+                        Buy Bundle
+                      </button>
+
+                      {outstandingOrders.length > 0 && (
+                        <button
+                          onClick={() => {
+                            setShowWaiveForm(true);
+                            setShowActionsMenu(false);
+                          }}
+                          className="flex items-center w-full px-4 py-2 text-sm text-orange-700 hover:bg-gray-100"
+                        >
+                          <MinusIcon className="w-4 h-4 mr-3" />
+                          Waive Amount
+                        </button>
+                      )}
+
+                      {patient.creditBalance > 0 && (
+                        <button
+                          onClick={() => {
+                            setShowReturnForm(true);
+                            setShowActionsMenu(false);
+                          }}
+                          className="flex items-center w-full px-4 py-2 text-sm text-purple-700 hover:bg-gray-100"
+                        >
+                          <ArrowDownTrayIcon className="w-4 h-4 mr-3" />
+                          Return Money
+                        </button>
+                      )}
+
+                      {isAdmin && (
+                        <>
+                          <div className="border-t border-gray-100 my-1"></div>
+                          <button
+                            onClick={() => {
+                              setShowDeleteDialog(true);
+                              setShowActionsMenu(false);
+                            }}
+                            className="flex items-center w-full px-4 py-2 text-sm text-red-600 hover:bg-gray-100"
+                          >
+                            <TrashIcon className="w-4 h-4 mr-3" />
+                            Delete Future Appointments
+                          </button>
+                        </>
+                      )}
+                    </div>
+                  </div>
+                </>
+              )}
+            </div>
+          </div>
+
+          <div className="mt-2 space-y-1.5">
+            {patient.phone && (
+              <div className="text-sm text-gray-500">{patient.phone}</div>
             )}
-            <span className={`font-medium ${patient.creditBalance > 0 ? 'text-green-600' : 'text-gray-500'}`}>
-              Credit: ${patient.creditBalance?.toFixed(2) || '0.00'}
-            </span>
-            <span className={`font-medium ${(outstandingOrders.reduce((sum, order) => {
-              const totalPaid = order.ledgers?.filter(l => l.kind === 'payment').reduce((s, l) => s + l.amount, 0) || 0;
-              const totalWaived = Math.abs(order.ledgers?.filter(l => l.kind === 'waive').reduce((s, l) => s + l.amount, 0) || 0);
-              return sum + Math.max(0, order.totalDue - totalPaid - totalWaived);
-            }, 0)) > 0 ? 'text-red-600' : 'text-gray-500'}`}>
-              Owes: ${outstandingOrders.reduce((sum, order) => {
+
+            <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm">
+              {patient.creditsSummary && patient.creditsSummary.length > 0 && (
+                <span className="font-medium text-indigo-600">
+                  {patient.creditsSummary.map(c => `${c.quantity}x ${c.sessionTypeName}`).join(', ')}
+                </span>
+              )}
+              <span className={`font-medium ${patient.creditBalance > 0 ? 'text-green-600' : 'text-gray-500'}`}>
+                Credit: ${patient.creditBalance?.toFixed(2) || '0.00'}
+              </span>
+              <span className={`font-medium ${(outstandingOrders.reduce((sum, order) => {
                 const totalPaid = order.ledgers?.filter(l => l.kind === 'payment').reduce((s, l) => s + l.amount, 0) || 0;
                 const totalWaived = Math.abs(order.ledgers?.filter(l => l.kind === 'waive').reduce((s, l) => s + l.amount, 0) || 0);
                 return sum + Math.max(0, order.totalDue - totalPaid - totalWaived);
-              }, 0).toFixed(2)}
-            </span>
+              }, 0)) > 0 ? 'text-red-600' : 'text-gray-500'}`}>
+                Owes: ${outstandingOrders.reduce((sum, order) => {
+                  const totalPaid = order.ledgers?.filter(l => l.kind === 'payment').reduce((s, l) => s + l.amount, 0) || 0;
+                  const totalWaived = Math.abs(order.ledgers?.filter(l => l.kind === 'waive').reduce((s, l) => s + l.amount, 0) || 0);
+                  return sum + Math.max(0, order.totalDue - totalPaid - totalWaived);
+                }, 0).toFixed(2)}
+              </span>
+            </div>
           </div>
         </div>
 
-        <div className="relative mt-4 sm:mt-0">
+        <div className="relative hidden sm:block">
           <button
             onClick={() => setShowActionsMenu(!showActionsMenu)}
             className="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
@@ -310,16 +403,16 @@ export default function PatientDetail() {
       </div>
 
 
-      <div className="grid gap-6 lg:grid-cols-3">
-        <div className="lg:col-span-2 space-y-6">
+      <div className="grid gap-4 sm:gap-6 lg:grid-cols-3">
+        <div className="lg:col-span-2 space-y-4 sm:space-y-6">
           {/* Appointments */}
           <div className="card">
             <div className="card-header">
-              <h3 className="text-lg font-medium text-gray-900">Appointments</h3>
+              <h3 className="text-base sm:text-lg font-medium text-gray-900">Appointments</h3>
             </div>
             <div className="card-body p-0">
               {appointments.length === 0 ? (
-                <div className="p-6 text-center text-gray-500">
+                <div className="p-4 sm:p-6 text-center text-gray-500 text-sm">
                   No appointments scheduled
                 </div>
               ) : (
@@ -328,20 +421,20 @@ export default function PatientDetail() {
                     {paginatedAppointments.map(appointment => (
                       <div
                         key={appointment.id}
-                        className="p-4 cursor-pointer hover:bg-gray-50"
+                        className="p-3 sm:p-4 cursor-pointer hover:bg-gray-50"
                         onClick={() => setSelectedAppointment(appointment)}
                       >
-                        <div className="flex items-center justify-between">
-                          <div>
-                            <p className="text-sm font-medium text-gray-900">
+                        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-medium text-gray-900 truncate">
                               {format(new Date(appointment.startAt), 'MMM do, yyyy')} at{' '}
                               {format(new Date(appointment.startAt), 'h:mm a')}
                             </p>
-                            <p className="text-sm text-gray-500">
+                            <p className="text-xs sm:text-sm text-gray-500 truncate">
                               Dr. {appointment.doctor.name} • {appointment.sessionType.name}
                             </p>
                           </div>
-                          <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+                          <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium self-start sm:self-auto ${
                             appointment.status === 'confirmed'
                               ? 'bg-green-100 text-green-800'
                               : appointment.status === 'cancelled'
@@ -355,19 +448,19 @@ export default function PatientDetail() {
                     ))}
                   </div>
                   {totalPages > 1 && (
-                    <div className="flex items-center justify-between p-4">
+                    <div className="flex items-center justify-between p-3 sm:p-4 border-t border-gray-200">
                       <button
                         onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
                         disabled={currentPage === 1}
-                        className="btn-secondary"
+                        className="btn-secondary text-xs sm:text-sm px-2.5 sm:px-4 py-1.5 sm:py-2"
                       >
                         Previous
                       </button>
-                      <span className="text-sm text-gray-500">Page {currentPage} of {totalPages}</span>
+                      <span className="text-xs sm:text-sm text-gray-500">Page {currentPage} of {totalPages}</span>
                       <button
                         onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
                         disabled={currentPage === totalPages}
-                        className="btn-secondary"
+                        className="btn-secondary text-xs sm:text-sm px-2.5 sm:px-4 py-1.5 sm:py-2"
                       >
                         Next
                       </button>
@@ -379,15 +472,15 @@ export default function PatientDetail() {
           </div>
         </div>
 
-        <div className="space-y-6">
+        <div className="space-y-4 sm:space-y-6">
           {/* Outstanding Orders */}
           <div className="card">
             <div className="card-header">
-              <h3 className="text-lg font-medium text-gray-900">Outstanding Orders</h3>
+              <h3 className="text-base sm:text-lg font-medium text-gray-900">Outstanding Orders</h3>
             </div>
             <div className="card-body p-0">
               {outstandingOrders.length === 0 ? (
-                <div className="p-6 text-center text-gray-500">
+                <div className="p-4 sm:p-6 text-center text-gray-500 text-sm">
                   No outstanding orders
                 </div>
               ) : (
@@ -396,11 +489,11 @@ export default function PatientDetail() {
                     const totalPaid = order.ledgers?.filter(l => l.kind === 'payment').reduce((s, l) => s + l.amount, 0) || 0;
                     const totalWaived = Math.abs(order.ledgers?.filter(l => l.kind === 'waive').reduce((s, l) => s + l.amount, 0) || 0);
                     const pendingAmount = Math.max(0, order.totalDue - totalPaid - totalWaived);
-                    
+
                     return (
-                      <div key={order.id} className="p-4">
-                        <div className="flex items-center justify-between">
-                          <div>
+                      <div key={order.id} className="p-3 sm:p-4">
+                        <div className="flex items-start justify-between gap-2">
+                          <div className="flex-1 min-w-0">
                             <p className="text-sm font-medium text-gray-900">
                               Order #{order.id.slice(-6)}
                             </p>
@@ -418,10 +511,10 @@ export default function PatientDetail() {
                               </p>
                             )}
                           </div>
-                          <div className="text-right">
+                          <div className="text-right flex-shrink-0">
                             <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
-                              order.status === 'partially_paid' 
-                                ? 'bg-yellow-100 text-yellow-800' 
+                              order.status === 'partially_paid'
+                                ? 'bg-yellow-100 text-yellow-800'
                                 : 'bg-red-100 text-red-800'
                             }`}>
                               {order.status.replace('_', ' ')}
@@ -442,36 +535,36 @@ export default function PatientDetail() {
           {/* Transaction History */}
           <div className="card">
             <div className="card-header">
-              <h3 className="text-lg font-medium text-gray-900">Transaction History</h3>
+              <h3 className="text-base sm:text-lg font-medium text-gray-900">Transaction History</h3>
             </div>
             <div className="card-body p-0">
               {patient.ledgers?.length === 0 ? (
-                <div className="p-6 text-center text-gray-500">
+                <div className="p-4 sm:p-6 text-center text-gray-500 text-sm">
                   No transactions
                 </div>
               ) : (
                 <div className={`divide-y divide-gray-200 ${patient.ledgers.length > 4 ? 'max-h-80 overflow-y-auto' : ''}`}>
                   {patient.ledgers?.map(ledger => (
-                    <div key={ledger.id} className="p-4">
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <p className="text-sm font-medium text-gray-900">
+                    <div key={ledger.id} className="p-3 sm:p-4">
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium text-gray-900 capitalize">
                             {ledger.kind}
                           </p>
                           <p className="text-xs text-gray-500">
                             {format(new Date(ledger.occurredAt), 'MMM do, yyyy')}
                           </p>
                           {ledger.notes && (
-                            <p className="text-xs text-gray-600 mt-1">
+                            <p className="text-xs text-gray-600 mt-1 break-words">
                               {ledger.notes}
                             </p>
                           )}
                         </div>
-                        <div className="text-right">
+                        <div className="text-right flex-shrink-0">
                           <p className={`text-sm font-medium ${ledger.amount < 0 ? 'text-red-600' : 'text-green-600'}`}>
                             ${Math.abs(ledger.amount).toFixed(2)}
                           </p>
-                          <p className="text-xs text-gray-500">
+                          <p className="text-xs text-gray-500 capitalize">
                             {ledger.method}
                           </p>
                         </div>
@@ -486,24 +579,24 @@ export default function PatientDetail() {
           {/* Patient Info */}
           <div className="card">
             <div className="card-header">
-              <h3 className="text-lg font-medium text-gray-900">Patient Info</h3>
+              <h3 className="text-base sm:text-lg font-medium text-gray-900">Patient Info</h3>
             </div>
             <div className="card-body">
-              <dl className="space-y-3">
+              <dl className="space-y-2.5 sm:space-y-3">
                 <div>
-                  <dt className="text-sm font-medium text-gray-500">Name</dt>
-                  <dd className="text-sm text-gray-900">{patient.name}</dd>
+                  <dt className="text-xs sm:text-sm font-medium text-gray-500">Name</dt>
+                  <dd className="text-sm text-gray-900 break-words">{patient.name}</dd>
                 </div>
                 {patient.phone && (
                   <div>
-                    <dt className="text-sm font-medium text-gray-500">Phone</dt>
+                    <dt className="text-xs sm:text-sm font-medium text-gray-500">Phone</dt>
                     <dd className="text-sm text-gray-900">{patient.phone}</dd>
                   </div>
                 )}
                 {patient.notes && (
                   <div>
-                    <dt className="text-sm font-medium text-gray-500">Notes</dt>
-                    <dd className="text-sm text-gray-900">{patient.notes}</dd>
+                    <dt className="text-xs sm:text-sm font-medium text-gray-500">Notes</dt>
+                    <dd className="text-sm text-gray-900 break-words">{patient.notes}</dd>
                   </div>
                 )}
               </dl>
