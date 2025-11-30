@@ -7,7 +7,8 @@ import {
   MinusIcon,
   ArrowDownTrayIcon,
   TrashIcon,
-  CubeIcon
+  CubeIcon,
+  ChevronDownIcon
 } from '@heroicons/react/24/outline';
 import { usePatient, useDeleteFutureAppointments } from '../hooks/usePatients';
 import { useMutation, useQueryClient, useQuery } from '@tanstack/react-query';
@@ -23,6 +24,7 @@ export default function PatientDetail() {
   const [showWaiveForm, setShowWaiveForm] = useState(false);
   const [showReturnForm, setShowReturnForm] = useState(false);
   const [showBundleForm, setShowBundleForm] = useState(false);
+  const [showActionsMenu, setShowActionsMenu] = useState(false);
   const [selectedAppointment, setSelectedAppointment] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
@@ -188,6 +190,9 @@ export default function PatientDetail() {
   const totalPages = Math.max(1, Math.ceil(appointments.length / appointmentsPerPage));
   const paginatedAppointments = appointments.slice((currentPage - 1) * appointmentsPerPage, currentPage * appointmentsPerPage);
 
+  // Calculate total service credits
+  const totalServiceCredits = patient.creditsSummary?.reduce((sum, credit) => sum + credit.quantity, 0) || 0;
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
@@ -195,6 +200,11 @@ export default function PatientDetail() {
           <h1 className="text-2xl font-bold text-gray-900">{patient.name}</h1>
           <div className="mt-1 flex items-center space-x-4 text-sm">
             {patient.phone && <span className="text-gray-500">{patient.phone}</span>}
+            {totalServiceCredits > 0 && (
+              <span className="font-medium text-indigo-600">
+                Service Credits: {totalServiceCredits}
+              </span>
+            )}
             <span className={`font-medium ${patient.creditBalance > 0 ? 'text-green-600' : 'text-gray-500'}`}>
               Credit: ${patient.creditBalance?.toFixed(2) || '0.00'}
             </span>
@@ -211,48 +221,90 @@ export default function PatientDetail() {
             </span>
           </div>
         </div>
-        
-        <div className="flex flex-col sm:flex-row justify-center sm:justify-start space-y-2 sm:space-y-0 sm:space-x-3 mt-4 sm:mt-0">
+
+        <div className="relative mt-4 sm:mt-0">
           <button
-            onClick={() => setShowPaymentForm(true)}
-            className="btn-primary"
+            onClick={() => setShowActionsMenu(!showActionsMenu)}
+            className="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
           >
-            <CurrencyDollarIcon className="w-4 h-4 mr-2" />
-            Record Payment
+            Actions
+            <ChevronDownIcon className="ml-2 -mr-1 h-5 w-5" />
           </button>
-          <button
-            onClick={() => setShowBundleForm(true)}
-            className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-          >
-            <CubeIcon className="w-4 h-4 mr-2" />
-            Buy Bundle
-          </button>
-          {outstandingOrders.length > 0 && (
-            <button
-              onClick={() => setShowWaiveForm(true)}
-              className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-orange-700 bg-orange-100 hover:bg-orange-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500"
-            >
-              <MinusIcon className="w-4 h-4 mr-2" />
-              Waive Amount
-            </button>
-          )}
-          {patient.creditBalance > 0 && (
-            <button
-              onClick={() => setShowReturnForm(true)}
-              className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-purple-700 bg-purple-100 hover:bg-purple-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500"
-            >
-              <ArrowDownTrayIcon className="w-4 h-4 mr-2" />
-              Return Money
-            </button>
-          )}
-          {isAdmin && (
-            <button
-              onClick={() => setShowDeleteDialog(true)}
-              className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
-            >
-              <TrashIcon className="w-4 h-4 mr-2" />
-              Delete Future Appointments
-            </button>
+
+          {showActionsMenu && (
+            <>
+              <div
+                className="fixed inset-0 z-10"
+                onClick={() => setShowActionsMenu(false)}
+              />
+              <div className="absolute right-0 z-20 mt-2 w-56 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5">
+                <div className="py-1" role="menu">
+                  <button
+                    onClick={() => {
+                      setShowPaymentForm(true);
+                      setShowActionsMenu(false);
+                    }}
+                    className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                  >
+                    <CurrencyDollarIcon className="w-4 h-4 mr-3" />
+                    Record Payment
+                  </button>
+
+                  <button
+                    onClick={() => {
+                      setShowBundleForm(true);
+                      setShowActionsMenu(false);
+                    }}
+                    className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                  >
+                    <CubeIcon className="w-4 h-4 mr-3" />
+                    Buy Bundle
+                  </button>
+
+                  {outstandingOrders.length > 0 && (
+                    <button
+                      onClick={() => {
+                        setShowWaiveForm(true);
+                        setShowActionsMenu(false);
+                      }}
+                      className="flex items-center w-full px-4 py-2 text-sm text-orange-700 hover:bg-gray-100"
+                    >
+                      <MinusIcon className="w-4 h-4 mr-3" />
+                      Waive Amount
+                    </button>
+                  )}
+
+                  {patient.creditBalance > 0 && (
+                    <button
+                      onClick={() => {
+                        setShowReturnForm(true);
+                        setShowActionsMenu(false);
+                      }}
+                      className="flex items-center w-full px-4 py-2 text-sm text-purple-700 hover:bg-gray-100"
+                    >
+                      <ArrowDownTrayIcon className="w-4 h-4 mr-3" />
+                      Return Money
+                    </button>
+                  )}
+
+                  {isAdmin && (
+                    <>
+                      <div className="border-t border-gray-100 my-1"></div>
+                      <button
+                        onClick={() => {
+                          setShowDeleteDialog(true);
+                          setShowActionsMenu(false);
+                        }}
+                        className="flex items-center w-full px-4 py-2 text-sm text-red-600 hover:bg-gray-100"
+                      >
+                        <TrashIcon className="w-4 h-4 mr-3" />
+                        Delete Future Appointments
+                      </button>
+                    </>
+                  )}
+                </div>
+              </div>
+            </>
           )}
         </div>
       </div>
@@ -261,7 +313,7 @@ export default function PatientDetail() {
       {patient.creditsSummary && patient.creditsSummary.length > 0 && (
         <div className="card bg-gradient-to-r from-indigo-50 to-purple-50">
           <div className="card-header">
-            <h3 className="text-lg font-medium text-gray-900">Service Credits</h3>
+            <h3 className="text-lg font-medium text-gray-900">Service Credits Breakdown</h3>
           </div>
           <div className="card-body">
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
