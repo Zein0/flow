@@ -427,11 +427,13 @@ export default function PatientDetail() {
                         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
                           <div className="flex-1 min-w-0">
                             <p className="text-sm font-medium text-gray-900 truncate">
-                              {format(new Date(appointment.startAt), 'MMM do, yyyy')} at{' '}
-                              {format(new Date(appointment.startAt), 'h:mm a')}
+                              {format(new Date(appointment.startAt), 'MMM do, yyyy')}
                             </p>
                             <p className="text-xs sm:text-sm text-gray-500 truncate">
-                              Dr. {appointment.doctor.name} • {appointment.sessionType.name}
+                              {format(new Date(appointment.startAt), 'h:mm a')} - {format(new Date(appointment.endAt), 'h:mm a')} • Dr. {appointment.doctor.name}
+                            </p>
+                            <p className="text-xs text-gray-500 truncate">
+                              {appointment.sessionType.name}
                             </p>
                           </div>
                           <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium self-start sm:self-auto ${

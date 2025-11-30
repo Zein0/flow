@@ -18,7 +18,14 @@ export default function BookingModal() {
 
   const { data: patients = [] } = usePatients(patientQuery);
   const { data: availableDoctors = [] } = useAvailableDoctors(selectedDate, selectedDate?.getHours());
-  const timeSlots = Array.from({ length: 10 }, (_, i) => i + 8);
+
+  // Generate 30-minute time slots from 8 AM to 6 PM
+  const timeSlots = [];
+  for (let hour = 8; hour < 18; hour++) {
+    timeSlots.push({ hour, minute: 0 });
+    timeSlots.push({ hour, minute: 30 });
+  }
+
   const createAppointment = useCreateAppointment();
   const createPatient = useCreatePatient();
 
@@ -130,17 +137,18 @@ export default function BookingModal() {
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">Time</label>
                     <select
-                      value={selectedDate.getHours()}
+                      value={`${selectedDate.getHours()}-${selectedDate.getMinutes()}`}
                       onChange={(e) => {
+                        const [hour, minute] = e.target.value.split('-').map(Number);
                         const newDate = new Date(selectedDate);
-                        newDate.setHours(parseInt(e.target.value), 0, 0, 0);
+                        newDate.setHours(hour, minute, 0, 0);
                         setSelectedDate(newDate);
                       }}
                       className="input"
                     >
-                      {timeSlots.map(hour => (
-                        <option key={hour} value={hour}>
-                          {format(new Date().setHours(hour, 0, 0, 0), 'h:mm a')}
+                      {timeSlots.map(({ hour, minute }) => (
+                        <option key={`${hour}-${minute}`} value={`${hour}-${minute}`}>
+                          {format(new Date().setHours(hour, minute, 0, 0), 'h:mm a')}
                         </option>
                       ))}
                     </select>

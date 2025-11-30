@@ -256,36 +256,36 @@ export default function DoctorCalendar() {
               dayAppointments
                 .sort((a, b) => new Date(a.startAt) - new Date(b.startAt))
                 .map(apt => (
-                  <div key={apt.id} className="p-4">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center space-x-4">
+                  <div key={apt.id} className="p-3 sm:p-4">
+                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                      <div className="flex items-center space-x-3 flex-1 min-w-0">
                         <div className="flex-shrink-0">
                           <ClockIcon className="h-5 w-5 text-gray-400" />
                         </div>
-                        <div>
+                        <div className="flex-1 min-w-0">
                           <p className="text-sm font-medium text-gray-900">
                             {format(new Date(apt.startAt), 'h:mm a')} - {format(new Date(apt.endAt), 'h:mm a')}
                           </p>
-                          <p className="text-sm text-gray-500">
+                          <p className="text-xs sm:text-sm text-gray-500 truncate">
                             {apt.sessionType.name} (${apt.finalPrice || apt.sessionType.price})
                           </p>
                         </div>
                       </div>
-                      
-                      <div className="flex items-center space-x-4">
-                        <div className="flex items-center">
-                          <UserIcon className="h-4 w-4 text-gray-400 mr-2" />
-                          <span className="text-sm font-medium text-gray-900">
+
+                      <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
+                        <div className="flex items-center min-w-0">
+                          <UserIcon className="h-4 w-4 text-gray-400 mr-2 flex-shrink-0" />
+                          <span className="text-sm font-medium text-gray-900 truncate">
                             {apt.patient.name}
                           </span>
                           {apt.patient.phone && (
-                            <span className="text-sm text-gray-500 ml-2">
+                            <span className="text-xs sm:text-sm text-gray-500 ml-2 hidden sm:inline">
                               {apt.patient.phone}
                             </span>
                           )}
                         </div>
-                        
-                        <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${statusColors[apt.status]}`}>
+
+                        <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full flex-shrink-0 self-start sm:self-auto ${statusColors[apt.status]}`}>
                           {apt.status.replace('_', ' ')}
                         </span>
                       </div>

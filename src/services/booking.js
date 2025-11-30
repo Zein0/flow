@@ -5,34 +5,72 @@ const { toZonedTime } = require('date-fns-tz');
 const prisma = new PrismaClient();
 
 async function createAppointment({ patientId, doctorId, startAt, createdBy, sessionTypeId, notes, recurrenceId }) {
-  // Normalize startAt to top of the hour (sessions are 1 hour)
+  // Get session type to determine duration
+  const sessionType = await prisma.sessionType.findUnique({
+    where: { id: sessionTypeId }
+  });
+
+  if (!sessionType) {
+    throw new Error('Session type not found');
+  }
+
+  // Calculate appointment start and end times based on session duration
   const start = new Date(startAt);
-  start.setMinutes(0, 0, 0);
   const end = new Date(start);
-  end.setHours(start.getHours() + 1);
+  end.setMinutes(end.getMinutes() + sessionType.durationMinutes);
 
   return await prisma.$transaction(async (tx) => {
-    // 1) Check global capacity for this hour (exclude cancelled)
+    // 1) Check global capacity for overlapping time slots (exclude cancelled)
     const globalCount = await tx.appointment.count({
       where: {
-        startAt: { gte: start, lt: end },
-        status: { not: 'cancelled' }
+        OR: [
+          // Existing appointment starts during new appointment
+          {
+            startAt: { gte: start, lt: end },
+            status: { not: 'cancelled' }
+          },
+          // Existing appointment ends during new appointment
+          {
+            endAt: { gt: start, lte: end },
+            status: { not: 'cancelled' }
+          },
+          // Existing appointment completely overlaps new appointment
+          {
+            startAt: { lte: start },
+            endAt: { gte: end },
+            status: { not: 'cancelled' }
+          }
+        ]
       }
     });
     if (globalCount >= 6) {
-      throw new Error('Capacity reached for this hour (6 appointments max).');
+      throw new Error('Capacity reached for this time slot (6 appointments max).');
     }
 
-    // 2) Check doctor availability (doctor must not already have an appointment same hour)
-    const doctorCount = await tx.appointment.count({
+    // 2) Check doctor availability (no overlapping appointments)
+    const doctorConflicts = await tx.appointment.findFirst({
       where: {
         doctorId,
-        startAt: { gte: start, lt: end },
-        status: { not: 'cancelled' }
+        status: { not: 'cancelled' },
+        OR: [
+          // Existing appointment starts during new appointment
+          {
+            startAt: { gte: start, lt: end }
+          },
+          // Existing appointment ends during new appointment
+          {
+            endAt: { gt: start, lte: end }
+          },
+          // Existing appointment completely overlaps new appointment
+          {
+            startAt: { lte: start },
+            endAt: { gte: end }
+          }
+        ]
       }
     });
-    if (doctorCount >= 1) {
-      throw new Error('Doctor already has an appointment at this hour.');
+    if (doctorConflicts) {
+      throw new Error('Doctor already has an appointment during this time.');
     }
 
     // 3) create appointment
@@ -339,32 +377,49 @@ async function getAvailability(doctorId, date) {
     },
     select: {
       startAt: true,
+      endAt: true,
       doctorId: true
     }
   });
 
   const availability = [];
+  // Generate 30-minute time slots from 8:00 to 18:00
   for (let hour = 8; hour < 18; hour++) {
-    const hourStart = new Date(date);
-    hourStart.setHours(hour, 0, 0, 0);
-    
-    // Fix timezone issue: convert UTC to Beirut time for hour comparison
-    const globalCount = appointments.filter(apt => {
-      const beirutTime = toZonedTime(apt.startAt, 'Asia/Beirut');
-      return beirutTime.getHours() === hour;
-    }).length;
-    
-    const doctorBusy = doctorId && appointments.some(apt => {
-      const beirutTime = toZonedTime(apt.startAt, 'Asia/Beirut');
-      return apt.doctorId === doctorId && beirutTime.getHours() === hour;
-    });
+    for (let minute = 0; minute < 60; minute += 30) {
+      const slotStart = new Date(date);
+      slotStart.setHours(hour, minute, 0, 0);
+      const slotEnd = new Date(slotStart);
+      slotEnd.setMinutes(slotEnd.getMinutes() + 30);
 
-    availability.push({
-      hour,
-      globalCapacity: globalCount,
-      doctorAvailable: doctorId ? !doctorBusy : true,
-      available: globalCount < 6 && (!doctorId || !doctorBusy)
-    });
+      // Convert to Beirut timezone for comparison
+      const slotStartBeirut = toZonedTime(slotStart, 'Asia/Beirut');
+      const slotEndBeirut = toZonedTime(slotEnd, 'Asia/Beirut');
+
+      // Check if any appointments overlap with this slot
+      const overlappingAppointments = appointments.filter(apt => {
+        const aptStartBeirut = toZonedTime(apt.startAt, 'Asia/Beirut');
+        const aptEndBeirut = toZonedTime(apt.endAt, 'Asia/Beirut');
+
+        // Check for any overlap
+        return (
+          (aptStartBeirut >= slotStartBeirut && aptStartBeirut < slotEndBeirut) ||
+          (aptEndBeirut > slotStartBeirut && aptEndBeirut <= slotEndBeirut) ||
+          (aptStartBeirut <= slotStartBeirut && aptEndBeirut >= slotEndBeirut)
+        );
+      });
+
+      const globalCount = overlappingAppointments.length;
+      const doctorBusy = doctorId && overlappingAppointments.some(apt => apt.doctorId === doctorId);
+
+      availability.push({
+        hour,
+        minute,
+        time: `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`,
+        globalCapacity: globalCount,
+        doctorAvailable: doctorId ? !doctorBusy : true,
+        available: globalCount < 6 && (!doctorId || !doctorBusy)
+      });
+    }
   }
 
   return availability;

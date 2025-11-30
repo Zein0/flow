@@ -63,7 +63,10 @@ export default function AppointmentDetailModal({ appointment, onClose }) {
 
                 <div className="space-y-2 mb-6">
                   <p className="text-sm text-gray-700">
-                    <span className="font-medium">Date:</span> {format(new Date(appointment.startAt), 'PPP p')}
+                    <span className="font-medium">Date:</span> {format(new Date(appointment.startAt), 'PPP')}
+                  </p>
+                  <p className="text-sm text-gray-700">
+                    <span className="font-medium">Time:</span> {format(new Date(appointment.startAt), 'p')} - {format(new Date(appointment.endAt), 'p')}
                   </p>
                   <p className="text-sm text-gray-700">
                     <span className="font-medium">Doctor:</span> {appointment.doctor?.name}
