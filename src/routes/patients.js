@@ -107,7 +107,8 @@ router.get('/:id', requireAuth, async (req, res) => {
 router.post('/', requireAuth, [
   body('name').isLength({ min: 2 }),
   body('phone').optional().isMobilePhone(),
-  body('notes').optional().isString()
+  body('notes').optional().isString(),
+  body('insurance').optional().isBoolean()
 ], async (req, res) => {
   try {
     const errors = validationResult(req);
@@ -115,10 +116,10 @@ router.post('/', requireAuth, [
       return res.status(400).json({ errors: errors.array() });
     }
 
-    const { name, phone, notes } = req.body;
+    const { name, phone, notes, insurance } = req.body;
 
     const patient = await prisma.patient.create({
-      data: { name, phone, notes }
+      data: { name, phone, notes, insurance }
     });
 
     await prisma.auditLog.create({
@@ -140,7 +141,8 @@ router.post('/', requireAuth, [
 router.put('/:id', requireAuth, [
   body('name').optional().isLength({ min: 2 }),
   body('phone').optional().isMobilePhone(),
-  body('notes').optional().isString()
+  body('notes').optional().isString(),
+  body('insurance').optional().isBoolean()
 ], async (req, res) => {
   try {
     const errors = validationResult(req);
@@ -148,11 +150,11 @@ router.put('/:id', requireAuth, [
       return res.status(400).json({ errors: errors.array() });
     }
 
-    const { name, phone, notes } = req.body;
+    const { name, phone, notes, insurance } = req.body;
 
     const patient = await prisma.patient.update({
       where: { id: req.params.id },
-      data: { name, phone, notes }
+      data: { name, phone, notes, insurance }
     });
 
     await prisma.auditLog.create({

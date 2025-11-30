@@ -125,6 +125,81 @@ async function confirmAppointment(appointmentId, { finalPrice, createdBy, paymen
 
     const servicePrice = appointment.sessionType.price;
 
+    // Handle insurance patients - no payment required
+    if (appointment.patient.insurance) {
+      // Update appointment
+      const updatedAppointment = await tx.appointment.update({
+        where: { id: appointmentId },
+        data: {
+          status: 'completed',
+          finalPrice: servicePrice
+        },
+        include: {
+          patient: true,
+          doctor: true,
+          sessionType: true
+        }
+      });
+
+      // Create order marked as paid via insurance
+      const order = await tx.order.create({
+        data: {
+          patientId: appointment.patientId,
+          appointmentId: appointmentId,
+          orderType: 'appointment',
+          subtotal: servicePrice,
+          totalDue: servicePrice,
+          status: 'paid',
+          createdBy
+        }
+      });
+
+      // Create charge in ledger
+      await tx.ledger.create({
+        data: {
+          patientId: appointment.patientId,
+          orderId: order.id,
+          kind: 'charge',
+          amount: servicePrice,
+          method: 'cash',
+          notes: 'Covered by insurance',
+          createdBy
+        }
+      });
+
+      // Create payment in ledger (insurance coverage)
+      await tx.ledger.create({
+        data: {
+          patientId: appointment.patientId,
+          orderId: order.id,
+          kind: 'payment',
+          amount: servicePrice,
+          method: 'cash',
+          notes: 'Covered by insurance',
+          createdBy
+        }
+      });
+
+      // Generate reminders
+      await generateReminders(tx, updatedAppointment);
+
+      // Audit log
+      await tx.auditLog.create({
+        data: {
+          actorId: createdBy,
+          action: 'appointment.confirm',
+          targetType: 'appointment',
+          targetId: appointmentId,
+          metadata: {
+            finalPrice: updatedAppointment.finalPrice,
+            paymentMethod: 'insurance'
+          }
+        }
+      });
+
+      return { appointment: updatedAppointment, order };
+    }
+
     // Check if paying with service credit
     if (paymentMethod === 'service_credit') {
       // Find available service credit for this session type

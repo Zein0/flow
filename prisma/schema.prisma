@@ -34,6 +34,7 @@ model Patient {
   name          String
   phone         String?  @unique
   notes         String?
+  insurance     Boolean  @default(false)
   creditBalance Float    @default(0)
   createdAt     DateTime @default(now())
 

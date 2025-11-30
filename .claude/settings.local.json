@@ -15,7 +15,8 @@
       "Bash(mv:*)",
       "Bash(git rm:*)",
       "Bash(true)",
-      "Bash(npm install:*)"
+      "Bash(npm install:*)",
+      "Bash(cat:*)"
     ],
     "deny": []
   }

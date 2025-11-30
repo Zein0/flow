@@ -105,6 +105,17 @@ export default function Patients() {
                   placeholder="Patient notes"
                 />
               </div>
+              <div className="flex items-center">
+                <input
+                  {...register('insurance')}
+                  type="checkbox"
+                  id="insurance"
+                  className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
+                />
+                <label htmlFor="insurance" className="ml-2 block text-sm text-gray-700">
+                  Has Insurance Coverage
+                </label>
+              </div>
               <div className="flex justify-end space-x-3">
                 <button
                   type="button"
@@ -153,9 +164,16 @@ export default function Patients() {
                 className="card hover:shadow-soft-lg transition-shadow"
               >
                 <div className="card-body">
-                  <h3 className="text-lg font-medium text-gray-900 mb-2">
-                    {patient.name}
-                  </h3>
+                  <div className="flex items-center justify-between mb-2">
+                    <h3 className="text-lg font-medium text-gray-900">
+                      {patient.name}
+                    </h3>
+                    {patient.insurance && (
+                      <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                        Insurance
+                      </span>
+                    )}
+                  </div>
                   {patient.phone && (
                     <div className="flex items-center text-sm text-gray-600 mb-2">
                       <PhoneIcon className="w-4 h-4 mr-1" />

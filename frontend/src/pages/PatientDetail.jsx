@@ -198,7 +198,14 @@ export default function PatientDetail() {
       <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
         <div className="flex-1 min-w-0">
           <div className="flex items-start justify-between">
-            <h1 className="text-xl sm:text-2xl font-bold text-gray-900 truncate">{patient.name}</h1>
+            <div className="flex items-center gap-2 min-w-0">
+              <h1 className="text-xl sm:text-2xl font-bold text-gray-900 truncate">{patient.name}</h1>
+              {patient.insurance && (
+                <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800 flex-shrink-0">
+                  Insurance
+                </span>
+              )}
+            </div>
             <div className="relative ml-2 sm:hidden">
               <button
                 onClick={() => setShowActionsMenu(!showActionsMenu)}
@@ -216,52 +223,56 @@ export default function PatientDetail() {
                   />
                   <div className="absolute right-0 z-20 mt-2 w-56 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5">
                     <div className="py-1" role="menu">
-                      <button
-                        onClick={() => {
-                          setShowPaymentForm(true);
-                          setShowActionsMenu(false);
-                        }}
-                        className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                      >
-                        <CurrencyDollarIcon className="w-4 h-4 mr-3" />
-                        Record Payment
-                      </button>
+                      {!patient.insurance && (
+                        <>
+                          <button
+                            onClick={() => {
+                              setShowPaymentForm(true);
+                              setShowActionsMenu(false);
+                            }}
+                            className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                          >
+                            <CurrencyDollarIcon className="w-4 h-4 mr-3" />
+                            Record Payment
+                          </button>
 
-                      <button
-                        onClick={() => {
-                          setShowBundleForm(true);
-                          setShowActionsMenu(false);
-                        }}
-                        className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                      >
-                        <CubeIcon className="w-4 h-4 mr-3" />
-                        Buy Bundle
-                      </button>
+                          <button
+                            onClick={() => {
+                              setShowBundleForm(true);
+                              setShowActionsMenu(false);
+                            }}
+                            className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                          >
+                            <CubeIcon className="w-4 h-4 mr-3" />
+                            Buy Bundle
+                          </button>
 
-                      {outstandingOrders.length > 0 && (
-                        <button
-                          onClick={() => {
-                            setShowWaiveForm(true);
-                            setShowActionsMenu(false);
-                          }}
-                          className="flex items-center w-full px-4 py-2 text-sm text-orange-700 hover:bg-gray-100"
-                        >
-                          <MinusIcon className="w-4 h-4 mr-3" />
-                          Waive Amount
-                        </button>
-                      )}
+                          {outstandingOrders.length > 0 && (
+                            <button
+                              onClick={() => {
+                                setShowWaiveForm(true);
+                                setShowActionsMenu(false);
+                              }}
+                              className="flex items-center w-full px-4 py-2 text-sm text-orange-700 hover:bg-gray-100"
+                            >
+                              <MinusIcon className="w-4 h-4 mr-3" />
+                              Waive Amount
+                            </button>
+                          )}
 
-                      {patient.creditBalance > 0 && (
-                        <button
-                          onClick={() => {
-                            setShowReturnForm(true);
-                            setShowActionsMenu(false);
-                          }}
-                          className="flex items-center w-full px-4 py-2 text-sm text-purple-700 hover:bg-gray-100"
-                        >
-                          <ArrowDownTrayIcon className="w-4 h-4 mr-3" />
-                          Return Money
-                        </button>
+                          {patient.creditBalance > 0 && (
+                            <button
+                              onClick={() => {
+                                setShowReturnForm(true);
+                                setShowActionsMenu(false);
+                              }}
+                              className="flex items-center w-full px-4 py-2 text-sm text-purple-700 hover:bg-gray-100"
+                            >
+                              <ArrowDownTrayIcon className="w-4 h-4 mr-3" />
+                              Return Money
+                            </button>
+                          )}
+                        </>
                       )}
 
                       {isAdmin && (
@@ -332,52 +343,56 @@ export default function PatientDetail() {
               />
               <div className="absolute right-0 z-20 mt-2 w-56 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5">
                 <div className="py-1" role="menu">
-                  <button
-                    onClick={() => {
-                      setShowPaymentForm(true);
-                      setShowActionsMenu(false);
-                    }}
-                    className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                  >
-                    <CurrencyDollarIcon className="w-4 h-4 mr-3" />
-                    Record Payment
-                  </button>
+                  {!patient.insurance && (
+                    <>
+                      <button
+                        onClick={() => {
+                          setShowPaymentForm(true);
+                          setShowActionsMenu(false);
+                        }}
+                        className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                      >
+                        <CurrencyDollarIcon className="w-4 h-4 mr-3" />
+                        Record Payment
+                      </button>
 
-                  <button
-                    onClick={() => {
-                      setShowBundleForm(true);
-                      setShowActionsMenu(false);
-                    }}
-                    className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                  >
-                    <CubeIcon className="w-4 h-4 mr-3" />
-                    Buy Bundle
-                  </button>
+                      <button
+                        onClick={() => {
+                          setShowBundleForm(true);
+                          setShowActionsMenu(false);
+                        }}
+                        className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                      >
+                        <CubeIcon className="w-4 h-4 mr-3" />
+                        Buy Bundle
+                      </button>
 
-                  {outstandingOrders.length > 0 && (
-                    <button
-                      onClick={() => {
-                        setShowWaiveForm(true);
-                        setShowActionsMenu(false);
-                      }}
-                      className="flex items-center w-full px-4 py-2 text-sm text-orange-700 hover:bg-gray-100"
-                    >
-                      <MinusIcon className="w-4 h-4 mr-3" />
-                      Waive Amount
-                    </button>
-                  )}
+                      {outstandingOrders.length > 0 && (
+                        <button
+                          onClick={() => {
+                            setShowWaiveForm(true);
+                            setShowActionsMenu(false);
+                          }}
+                          className="flex items-center w-full px-4 py-2 text-sm text-orange-700 hover:bg-gray-100"
+                        >
+                          <MinusIcon className="w-4 h-4 mr-3" />
+                          Waive Amount
+                        </button>
+                      )}
 
-                  {patient.creditBalance > 0 && (
-                    <button
-                      onClick={() => {
-                        setShowReturnForm(true);
-                        setShowActionsMenu(false);
-                      }}
-                      className="flex items-center w-full px-4 py-2 text-sm text-purple-700 hover:bg-gray-100"
-                    >
-                      <ArrowDownTrayIcon className="w-4 h-4 mr-3" />
-                      Return Money
-                    </button>
+                      {patient.creditBalance > 0 && (
+                        <button
+                          onClick={() => {
+                            setShowReturnForm(true);
+                            setShowActionsMenu(false);
+                          }}
+                          className="flex items-center w-full px-4 py-2 text-sm text-purple-700 hover:bg-gray-100"
+                        >
+                          <ArrowDownTrayIcon className="w-4 h-4 mr-3" />
+                          Return Money
+                        </button>
+                      )}
+                    </>
                   )}
 
                   {isAdmin && (
@@ -595,6 +610,18 @@ export default function PatientDetail() {
                     <dd className="text-sm text-gray-900">{patient.phone}</dd>
                   </div>
                 )}
+                <div>
+                  <dt className="text-xs sm:text-sm font-medium text-gray-500">Insurance</dt>
+                  <dd className="text-sm">
+                    {patient.insurance ? (
+                      <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                        Covered
+                      </span>
+                    ) : (
+                      <span className="text-gray-900">None</span>
+                    )}
+                  </dd>
+                </div>
                 {patient.notes && (
                   <div>
                     <dt className="text-xs sm:text-sm font-medium text-gray-500">Notes</dt>

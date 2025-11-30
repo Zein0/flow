@@ -231,65 +231,81 @@ export default function Appointments() {
         return (
           <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50">
             <div className="bg-white rounded-lg p-6 w-full max-w-md">
-              <h3 className="text-lg font-medium text-gray-900 mb-4">Confirm Appointment & Record Payment</h3>
+              <h3 className="text-lg font-medium text-gray-900 mb-4">
+                {patient?.insurance ? 'Confirm Appointment' : 'Confirm Appointment & Record Payment'}
+              </h3>
               <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Payment Method
-                  </label>
-                  <div className="space-y-2">
-                    <label className="flex items-center">
-                      <input
-                        type="radio"
-                        value="cash"
-                        checked={paymentMethod === 'cash'}
-                        onChange={(e) => setPaymentMethod(e.target.value)}
-                        className="mr-2"
-                      />
-                      <span className="text-sm">Pay with Cash</span>
-                    </label>
-                    {hasCredits && (
-                      <label className="flex items-center">
-                        <input
-                          type="radio"
-                          value="service_credit"
-                          checked={paymentMethod === 'service_credit'}
-                          onChange={(e) => setPaymentMethod(e.target.value)}
-                          className="mr-2"
-                        />
-                        <span className="text-sm">
-                          Use Service Credit
-                          <span className="ml-1 text-indigo-600 font-medium">
-                            ({patient.creditsSummary.find(c => c.sessionTypeId === sessionType.id)?.quantity} available)
-                          </span>
-                        </span>
-                      </label>
-                    )}
-                  </div>
-                </div>
-
-                {paymentMethod === 'cash' && (
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Final Price (optional)
-                    </label>
-                    <input
-                      type="number"
-                      step="0.01"
-                      value={finalPrice}
-                      onChange={(e) => setFinalPrice(e.target.value)}
-                      placeholder="Leave blank to use default price"
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
-                    />
-                  </div>
-                )}
-
-                {paymentMethod === 'service_credit' && (
-                  <div className="bg-indigo-50 rounded-lg p-3">
-                    <p className="text-sm text-indigo-800">
-                      This appointment will be paid with 1 service credit for {sessionType?.name}.
+                {patient?.insurance ? (
+                  <div className="bg-blue-50 rounded-lg p-4">
+                    <p className="text-sm font-medium text-blue-900 mb-2">Insurance Coverage</p>
+                    <p className="text-sm text-blue-800">
+                      This appointment is covered by insurance. Price: ${sessionType?.price}
+                    </p>
+                    <p className="text-sm text-blue-700 mt-1">
+                      No payment required from patient.
                     </p>
                   </div>
+                ) : (
+                  <>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Payment Method
+                      </label>
+                      <div className="space-y-2">
+                        <label className="flex items-center">
+                          <input
+                            type="radio"
+                            value="cash"
+                            checked={paymentMethod === 'cash'}
+                            onChange={(e) => setPaymentMethod(e.target.value)}
+                            className="mr-2"
+                          />
+                          <span className="text-sm">Pay with Cash</span>
+                        </label>
+                        {hasCredits && (
+                          <label className="flex items-center">
+                            <input
+                              type="radio"
+                              value="service_credit"
+                              checked={paymentMethod === 'service_credit'}
+                              onChange={(e) => setPaymentMethod(e.target.value)}
+                              className="mr-2"
+                            />
+                            <span className="text-sm">
+                              Use Service Credit
+                              <span className="ml-1 text-indigo-600 font-medium">
+                                ({patient.creditsSummary.find(c => c.sessionTypeId === sessionType.id)?.quantity} available)
+                              </span>
+                            </span>
+                          </label>
+                        )}
+                      </div>
+                    </div>
+
+                    {paymentMethod === 'cash' && (
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Final Price (optional)
+                        </label>
+                        <input
+                          type="number"
+                          step="0.01"
+                          value={finalPrice}
+                          onChange={(e) => setFinalPrice(e.target.value)}
+                          placeholder="Leave blank to use default price"
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
+                        />
+                      </div>
+                    )}
+
+                    {paymentMethod === 'service_credit' && (
+                      <div className="bg-indigo-50 rounded-lg p-3">
+                        <p className="text-sm text-indigo-800">
+                          This appointment will be paid with 1 service credit for {sessionType?.name}.
+                        </p>
+                      </div>
+                    )}
+                  </>
                 )}
 
                 <div className="flex space-x-3">
