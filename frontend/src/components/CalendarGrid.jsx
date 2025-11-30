@@ -29,28 +29,11 @@ export default function CalendarGrid() {
   // Filter out cancelled appointments
   const activeAppointments = appointments.filter(apt => apt.status !== 'cancelled');
 
-  const getAppointmentForSlot = (hour, minute) => {
-    return activeAppointments.find(apt => {
+  // Get all appointments that START at this specific time slot
+  const getAppointmentsStartingAtSlot = (hour, minute) => {
+    return activeAppointments.filter(apt => {
       const aptStart = new Date(apt.startAt);
       return aptStart.getHours() === hour && aptStart.getMinutes() === minute;
-    });
-  };
-
-  const isSlotOccupied = (hour, minute) => {
-    // Check if any appointment overlaps with this slot
-    return activeAppointments.some(apt => {
-      const aptStart = new Date(apt.startAt);
-      const aptEnd = new Date(apt.endAt);
-      const slotStart = new Date(selectedDate);
-      slotStart.setHours(hour, minute, 0, 0);
-      const slotEnd = new Date(slotStart);
-      slotEnd.setMinutes(slotEnd.getMinutes() + 30);
-
-      return (
-        (aptStart >= slotStart && aptStart < slotEnd) ||
-        (aptEnd > slotStart && aptEnd <= slotEnd) ||
-        (aptStart <= slotStart && aptEnd >= slotEnd)
-      );
     });
   };
 
@@ -95,68 +78,70 @@ export default function CalendarGrid() {
       <div className="card-body p-0 overflow-x-auto">
         <div className="divide-y divide-gray-200 min-w-[640px]">
           {timeSlots.map(({ hour, minute }) => {
-            const appointment = getAppointmentForSlot(hour, minute);
+            const appointmentsStartingHere = getAppointmentsStartingAtSlot(hour, minute);
             const slotAvailability = getAvailabilityForSlot(hour, minute);
-            const isAvailable = slotAvailability.available && !isSlotOccupied(hour, minute);
-            const isOccupied = isSlotOccupied(hour, minute);
-
-            // Skip rendering if this slot is in the middle of a 60-minute appointment
-            if (!appointment && isOccupied) {
-              return null;
-            }
-
-            const duration = appointment ? getAppointmentDuration(appointment) : 30;
-            const heightClass = duration === 60 ? 'min-h-[8rem]' : 'min-h-[4rem]';
+            const isAvailable = slotAvailability.available;
 
             return (
-              <div key={`${hour}-${minute}`} className={`flex items-stretch hover:bg-gray-50 ${heightClass}`}>
+              <div key={`${hour}-${minute}`} className="flex items-stretch min-h-[4rem] hover:bg-gray-50">
                 <div className="w-16 sm:w-20 px-2 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm font-medium text-gray-500 border-r border-gray-200 flex items-start">
                   {format(new Date().setHours(hour, minute, 0, 0), 'h:mm a')}
                 </div>
 
                 <div className="flex-1 px-2 sm:px-4 py-2 sm:py-3">
-                  {appointment ? (
-                    <div
-                      className={`h-full p-2 sm:p-3 rounded-lg border ${
-                        appointment.status === 'confirmed'
-                          ? 'bg-green-50 border-green-200'
-                          : appointment.status === 'cancelled'
-                          ? 'bg-red-50 border-red-200'
-                          : 'bg-blue-50 border-blue-200'
-                      }`}
-                    >
-                      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm font-medium text-gray-900 truncate">
-                            {appointment.patient.name}
-                          </p>
-                          <p className="text-xs text-gray-500 truncate">
-                            Dr. {appointment.doctor.name} • {appointment.sessionType.name}
-                          </p>
-                          <p className="text-xs text-gray-400 mt-1">
-                            {format(new Date(appointment.startAt), 'h:mm a')} - {format(new Date(appointment.endAt), 'h:mm a')}
-                          </p>
-                        </div>
-                        <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium flex-shrink-0 self-start sm:self-auto ${
-                          appointment.status === 'confirmed'
-                            ? 'bg-green-100 text-green-800'
-                            : appointment.status === 'cancelled'
-                            ? 'bg-red-100 text-red-800'
-                            : 'bg-blue-100 text-blue-800'
-                        }`}>
-                          {appointment.status}
-                        </span>
-                      </div>
+                  {appointmentsStartingHere.length > 0 ? (
+                    <div className="space-y-2">
+                      {appointmentsStartingHere.map(appointment => {
+                        const duration = getAppointmentDuration(appointment);
+
+                        return (
+                          <div
+                            key={appointment.id}
+                            className={`p-2 sm:p-3 rounded-lg border ${
+                              appointment.status === 'confirmed'
+                                ? 'bg-green-50 border-green-200'
+                                : appointment.status === 'cancelled'
+                                ? 'bg-red-50 border-red-200'
+                                : 'bg-blue-50 border-blue-200'
+                            }`}
+                          >
+                            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                              <div className="flex-1 min-w-0">
+                                <p className="text-sm font-medium text-gray-900 truncate">
+                                  {appointment.patient.name}
+                                </p>
+                                <p className="text-xs text-gray-500 truncate">
+                                  Dr. {appointment.doctor.name} • {appointment.sessionType.name}
+                                </p>
+                                <p className="text-xs text-gray-400 mt-1">
+                                  {format(new Date(appointment.startAt), 'h:mm a')} - {format(new Date(appointment.endAt), 'h:mm a')}
+                                  {duration === 60 && <span className="ml-1">(60 min)</span>}
+                                  {duration === 30 && <span className="ml-1">(30 min)</span>}
+                                </p>
+                              </div>
+                              <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium flex-shrink-0 self-start sm:self-auto ${
+                                appointment.status === 'confirmed'
+                                  ? 'bg-green-100 text-green-800'
+                                  : appointment.status === 'cancelled'
+                                  ? 'bg-red-100 text-red-800'
+                                  : 'bg-blue-100 text-blue-800'
+                              }`}>
+                                {appointment.status}
+                              </span>
+                            </div>
+                          </div>
+                        );
+                      })}
                     </div>
                   ) : (
                     <div className="h-full flex items-center justify-between">
                       <div className="flex items-center space-x-2">
                         <span className="text-xs text-gray-500">
-                          {slotAvailability.globalCapacity}/6
+                          Capacity: {slotAvailability.globalCapacity}/6
                         </span>
                         {!slotAvailability.doctorAvailable && selectedDoctor && (
                           <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">
-                            Busy
+                            Doctor Busy
                           </span>
                         )}
                       </div>
