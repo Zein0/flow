@@ -12,6 +12,7 @@ import PatientDetail from './pages/PatientDetail';
 import Doctors from './pages/Doctors';
 import Reports from './pages/Reports';
 import DoctorCalendar from './pages/DoctorCalendar';
+import Bundles from './pages/Bundles';
 
 const ProtectedRoute = ({ children }) => {
   const isAuthenticated = useAuthStore(state => state.isAuthenticated);
@@ -89,6 +90,11 @@ export default function App() {
           <Route path="doctors" element={
             <RoleProtectedRoute allowedRoles={['admin']}>
               <Doctors />
+            </RoleProtectedRoute>
+          } />
+          <Route path="bundles" element={
+            <RoleProtectedRoute allowedRoles={['admin']}>
+              <Bundles />
             </RoleProtectedRoute>
           } />
           <Route path="reports" element={

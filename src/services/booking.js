@@ -70,7 +70,7 @@ async function createAppointment({ patientId, doctorId, startAt, createdBy, sess
   });
 }
 
-async function confirmAppointment(appointmentId, { finalPrice, createdBy }) {
+async function confirmAppointment(appointmentId, { finalPrice, createdBy, paymentMethod = 'cash' }) {
   return await prisma.$transaction(async (tx) => {
     const appointment = await tx.appointment.findUnique({
       where: { id: appointmentId },
@@ -86,6 +86,104 @@ async function confirmAppointment(appointmentId, { finalPrice, createdBy }) {
     }
 
     const servicePrice = appointment.sessionType.price;
+
+    // Check if paying with service credit
+    if (paymentMethod === 'service_credit') {
+      // Find available service credit for this session type
+      const serviceCredit = await tx.serviceCredit.findFirst({
+        where: {
+          patientId: appointment.patientId,
+          sessionTypeId: appointment.sessionTypeId,
+          quantity: { gt: 0 }
+        }
+      });
+
+      if (!serviceCredit) {
+        throw new Error('No service credits available for this session type');
+      }
+
+      // Deduct 1 credit
+      await tx.serviceCredit.update({
+        where: { id: serviceCredit.id },
+        data: {
+          quantity: serviceCredit.quantity - 1
+        }
+      });
+
+      // Update appointment
+      const updatedAppointment = await tx.appointment.update({
+        where: { id: appointmentId },
+        data: {
+          status: 'completed',
+          finalPrice: servicePrice
+        },
+        include: {
+          patient: true,
+          doctor: true,
+          sessionType: true
+        }
+      });
+
+      // Create order marked as paid via credit
+      const order = await tx.order.create({
+        data: {
+          patientId: appointment.patientId,
+          appointmentId: appointmentId,
+          orderType: 'appointment',
+          subtotal: servicePrice,
+          totalDue: servicePrice,
+          status: 'paid',
+          createdBy
+        }
+      });
+
+      // Create charge in ledger
+      await tx.ledger.create({
+        data: {
+          patientId: appointment.patientId,
+          orderId: order.id,
+          kind: 'charge',
+          amount: servicePrice,
+          method: 'service_credit',
+          notes: 'Paid with service credit',
+          createdBy
+        }
+      });
+
+      // Create payment in ledger (service credit payment)
+      await tx.ledger.create({
+        data: {
+          patientId: appointment.patientId,
+          orderId: order.id,
+          kind: 'payment',
+          amount: servicePrice,
+          method: 'service_credit',
+          notes: 'Service credit used',
+          createdBy
+        }
+      });
+
+      // Generate reminders
+      await generateReminders(tx, updatedAppointment);
+
+      // Audit log
+      await tx.auditLog.create({
+        data: {
+          actorId: createdBy,
+          action: 'appointment.confirm',
+          targetType: 'appointment',
+          targetId: appointmentId,
+          metadata: {
+            finalPrice: updatedAppointment.finalPrice,
+            paymentMethod: 'service_credit'
+          }
+        }
+      });
+
+      return { appointment: updatedAppointment, order };
+    }
+
+    // Cash payment flow (original logic)
     let effectivePrice = servicePrice;
     let paidAmount = finalPrice || servicePrice;
 
@@ -93,7 +191,7 @@ async function confirmAppointment(appointmentId, { finalPrice, createdBy }) {
     if (appointment.patient.creditBalance > 0) {
       const creditToUse = Math.min(appointment.patient.creditBalance, effectivePrice);
       effectivePrice -= creditToUse;
-      
+
       if (creditToUse > 0) {
         // Deduct from credit balance
         await tx.patient.update({
@@ -142,6 +240,7 @@ async function confirmAppointment(appointmentId, { finalPrice, createdBy }) {
       data: {
         patientId: appointment.patientId,
         appointmentId: appointmentId,
+        orderType: 'appointment',
         subtotal: servicePrice,
         totalDue: servicePrice,
         status: orderStatus,
@@ -185,7 +284,10 @@ async function confirmAppointment(appointmentId, { finalPrice, createdBy }) {
         action: 'appointment.confirm',
         targetType: 'appointment',
         targetId: appointmentId,
-        metadata: { finalPrice: updatedAppointment.finalPrice }
+        metadata: {
+          finalPrice: updatedAppointment.finalPrice,
+          paymentMethod: 'cash'
+        }
       }
     });
 

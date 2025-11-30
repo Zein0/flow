@@ -1,16 +1,17 @@
 import { useState } from 'react';
 import { Outlet, Link, useLocation } from 'react-router-dom';
-import { 
-  HomeIcon, 
+import {
+  HomeIcon,
   CalendarDaysIcon,
   ClockIcon,
   CogIcon,
-  UserGroupIcon, 
+  UserGroupIcon,
   UserIcon,
   DocumentChartBarIcon,
   Bars3Icon,
   XMarkIcon,
-  ArrowRightOnRectangleIcon
+  ArrowRightOnRectangleIcon,
+  CubeIcon
 } from '@heroicons/react/24/outline';
 import { useAuthStore } from '../stores/auth';
 import { useLogout } from '../hooks/useAuth';
@@ -24,6 +25,7 @@ const navigation = [
   { name: 'Services', href: '/services', icon: CogIcon, roles: ['admin'] },
   { name: 'Patients', href: '/patients', icon: UserGroupIcon, roles: ['admin'] },
   { name: 'Doctors', href: '/doctors', icon: UserIcon, roles: ['admin'] },
+  { name: 'Bundles', href: '/bundles', icon: CubeIcon, roles: ['admin'] },
   { name: 'Reports', href: '/reports', icon: DocumentChartBarIcon, roles: ['admin', 'accounting'] },
 ];
 

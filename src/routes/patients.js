@@ -52,6 +52,7 @@ router.get('/:id', requireAuth, async (req, res) => {
         orders: {
           include: {
             appointment: true,
+            bundle: true,
             ledgers: true
           }
         },
@@ -61,11 +62,17 @@ router.get('/:id', requireAuth, async (req, res) => {
               include: {
                 appointment: {
                   include: { doctor: true }
-                }
+                },
+                bundle: true
               }
             }
           },
           orderBy: { occurredAt: 'desc' }
+        },
+        serviceCredits: {
+          include: {
+            sessionType: true
+          }
         }
       }
     });
@@ -75,8 +82,23 @@ router.get('/:id', requireAuth, async (req, res) => {
     }
 
     const balance = await getPatientBalance(patient.id);
-    
-    res.json({ ...patient, balance });
+
+    // Aggregate service credits by session type
+    const creditsSummary = patient.serviceCredits.reduce((acc, credit) => {
+      const existing = acc.find(c => c.sessionTypeId === credit.sessionTypeId);
+      if (existing) {
+        existing.quantity += credit.quantity;
+      } else {
+        acc.push({
+          sessionTypeId: credit.sessionTypeId,
+          sessionTypeName: credit.sessionType.name,
+          quantity: credit.quantity
+        });
+      }
+      return acc;
+    }, []);
+
+    res.json({ ...patient, balance, creditsSummary });
   } catch (error) {
     res.status(500).json({ error: 'Internal server error' });
   }
@@ -202,6 +224,193 @@ router.delete('/:id/appointments/future', requireAdmin, async (req, res) => {
     res.json({ deleted: deleted.count });
   } catch (error) {
     console.error('Delete future appointments error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// Get patient service credits
+router.get('/:id/credits', requireAuth, async (req, res) => {
+  try {
+    const serviceCredits = await prisma.serviceCredit.findMany({
+      where: {
+        patientId: req.params.id,
+        quantity: { gt: 0 }
+      },
+      include: {
+        sessionType: true
+      }
+    });
+
+    // Aggregate by session type
+    const creditsSummary = serviceCredits.reduce((acc, credit) => {
+      const existing = acc.find(c => c.sessionTypeId === credit.sessionTypeId);
+      if (existing) {
+        existing.quantity += credit.quantity;
+      } else {
+        acc.push({
+          sessionTypeId: credit.sessionTypeId,
+          sessionTypeName: credit.sessionType.name,
+          quantity: credit.quantity
+        });
+      }
+      return acc;
+    }, []);
+
+    res.json(creditsSummary);
+  } catch (error) {
+    console.error('Get service credits error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// Purchase bundle
+router.post('/:id/bundles/purchase', requireAuth, [
+  body('bundleId').isString(),
+  body('amountPaid').optional().isFloat({ min: 0 })
+], async (req, res) => {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() });
+    }
+
+    const { bundleId, amountPaid } = req.body;
+    const patientId = req.params.id;
+
+    const result = await prisma.$transaction(async (tx) => {
+      // Get bundle with items
+      const bundle = await tx.bundle.findUnique({
+        where: { id: bundleId },
+        include: {
+          items: {
+            include: {
+              sessionType: true
+            }
+          }
+        }
+      });
+
+      if (!bundle) {
+        throw new Error('Bundle not found');
+      }
+
+      if (!bundle.active) {
+        throw new Error('Bundle is not active');
+      }
+
+      const totalPrice = bundle.price;
+      const paid = amountPaid !== undefined ? amountPaid : totalPrice;
+
+      // Determine order status
+      let orderStatus = 'paid';
+      if (paid < totalPrice) {
+        orderStatus = 'partially_paid';
+      } else if (paid === 0) {
+        orderStatus = 'pending';
+      }
+
+      // Create order
+      const order = await tx.order.create({
+        data: {
+          patientId,
+          bundleId,
+          orderType: 'bundle',
+          subtotal: totalPrice,
+          totalDue: totalPrice,
+          status: orderStatus,
+          createdBy: req.user.id
+        }
+      });
+
+      // Create ledger entries
+      // Charge
+      await tx.ledger.create({
+        data: {
+          patientId,
+          orderId: order.id,
+          kind: 'charge',
+          amount: totalPrice,
+          method: 'cash',
+          notes: `Bundle purchase: ${bundle.name}`,
+          createdBy: req.user.id
+        }
+      });
+
+      // Payment (if any)
+      if (paid > 0) {
+        await tx.ledger.create({
+          data: {
+            patientId,
+            orderId: order.id,
+            kind: 'payment',
+            amount: paid,
+            method: 'cash',
+            notes: `Payment for bundle: ${bundle.name}`,
+            createdBy: req.user.id
+          }
+        });
+      }
+
+      // Create service credits (regardless of payment status)
+      for (const item of bundle.items) {
+        // Check if patient already has credits for this session type from this order
+        const existingCredit = await tx.serviceCredit.findUnique({
+          where: {
+            patientId_sessionTypeId_orderId: {
+              patientId,
+              sessionTypeId: item.sessionTypeId,
+              orderId: order.id
+            }
+          }
+        });
+
+        if (existingCredit) {
+          // Update existing credit
+          await tx.serviceCredit.update({
+            where: { id: existingCredit.id },
+            data: {
+              quantity: existingCredit.quantity + item.quantity
+            }
+          });
+        } else {
+          // Create new credit
+          await tx.serviceCredit.create({
+            data: {
+              patientId,
+              sessionTypeId: item.sessionTypeId,
+              quantity: item.quantity,
+              orderId: order.id
+            }
+          });
+        }
+      }
+
+      // Audit log
+      await tx.auditLog.create({
+        data: {
+          actorId: req.user.id,
+          action: 'bundle.purchase',
+          targetType: 'order',
+          targetId: order.id,
+          metadata: {
+            bundleId,
+            bundleName: bundle.name,
+            totalPrice,
+            amountPaid: paid,
+            patientId
+          }
+        }
+      });
+
+      return { order, bundle };
+    });
+
+    res.status(201).json(result);
+  } catch (error) {
+    console.error('Bundle purchase error:', error);
+    if (error.message === 'Bundle not found' || error.message === 'Bundle is not active') {
+      return res.status(400).json({ error: error.message });
+    }
     res.status(500).json({ error: 'Internal server error' });
   }
 });

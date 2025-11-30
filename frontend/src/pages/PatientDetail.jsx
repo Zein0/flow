@@ -6,10 +6,11 @@ import {
   XMarkIcon,
   MinusIcon,
   ArrowDownTrayIcon,
-  TrashIcon
+  TrashIcon,
+  CubeIcon
 } from '@heroicons/react/24/outline';
 import { usePatient, useDeleteFutureAppointments } from '../hooks/usePatients';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQueryClient, useQuery } from '@tanstack/react-query';
 import { toast } from 'react-hot-toast';
 import { useForm } from 'react-hook-form';
 import api from '../utils/api';
@@ -21,6 +22,7 @@ export default function PatientDetail() {
   const [showPaymentForm, setShowPaymentForm] = useState(false);
   const [showWaiveForm, setShowWaiveForm] = useState(false);
   const [showReturnForm, setShowReturnForm] = useState(false);
+  const [showBundleForm, setShowBundleForm] = useState(false);
   const [selectedAppointment, setSelectedAppointment] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
@@ -29,10 +31,20 @@ export default function PatientDetail() {
   const deleteFutureAppointments = useDeleteFutureAppointments();
   const user = useAuthStore(state => state.user);
   const isAdmin = user?.role === 'admin';
-  
+
   const { register, handleSubmit, reset, formState: { errors } } = useForm();
   const { register: registerWaive, handleSubmit: handleWaiveSubmit, reset: resetWaive, formState: { errors: waiveErrors } } = useForm();
   const { register: registerReturn, handleSubmit: handleReturnSubmit, reset: resetReturn, formState: { errors: returnErrors } } = useForm();
+  const { register: registerBundle, handleSubmit: handleBundleSubmit, reset: resetBundle, formState: { errors: bundleErrors } } = useForm();
+
+  // Fetch active bundles
+  const { data: bundles = [] } = useQuery({
+    queryKey: ['bundles', 'active'],
+    queryFn: async () => {
+      const response = await api.get('/bundles?active=true');
+      return response.data;
+    }
+  });
 
   // Record payment mutation
   const recordPaymentMutation = useMutation({
@@ -113,6 +125,30 @@ export default function PatientDetail() {
     });
   };
 
+  // Purchase bundle mutation
+  const purchaseBundleMutation = useMutation({
+    mutationFn: async (bundleData) => {
+      const response = await api.post(`/patients/${patientId}/bundles/purchase`, bundleData);
+      return response.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['patient', patientId] });
+      toast.success('Bundle purchased successfully');
+      resetBundle();
+      setShowBundleForm(false);
+    },
+    onError: (error) => {
+      toast.error(error.response?.data?.error || 'Failed to purchase bundle');
+    }
+  });
+
+  const onBundleSubmit = async (data) => {
+    purchaseBundleMutation.mutate({
+      bundleId: data.bundleId,
+      amountPaid: data.amountPaid ? parseFloat(data.amountPaid) : undefined
+    });
+  };
+
   if (isLoading) {
     return (
       <div className="animate-pulse space-y-6">
@@ -184,6 +220,13 @@ export default function PatientDetail() {
             <CurrencyDollarIcon className="w-4 h-4 mr-2" />
             Record Payment
           </button>
+          <button
+            onClick={() => setShowBundleForm(true)}
+            className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+          >
+            <CubeIcon className="w-4 h-4 mr-2" />
+            Buy Bundle
+          </button>
           {outstandingOrders.length > 0 && (
             <button
               onClick={() => setShowWaiveForm(true)}
@@ -213,6 +256,25 @@ export default function PatientDetail() {
           )}
         </div>
       </div>
+
+      {/* Service Credits Section */}
+      {patient.creditsSummary && patient.creditsSummary.length > 0 && (
+        <div className="card bg-gradient-to-r from-indigo-50 to-purple-50">
+          <div className="card-header">
+            <h3 className="text-lg font-medium text-gray-900">Service Credits</h3>
+          </div>
+          <div className="card-body">
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+              {patient.creditsSummary.map(credit => (
+                <div key={credit.sessionTypeId} className="bg-white rounded-lg p-4 shadow-sm">
+                  <p className="text-2xl font-bold text-indigo-600">{credit.quantity}x</p>
+                  <p className="text-sm text-gray-600 mt-1">{credit.sessionTypeName}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
 
       <div className="grid gap-6 lg:grid-cols-3">
         <div className="lg:col-span-2 space-y-6">
@@ -742,6 +804,93 @@ export default function PatientDetail() {
                       {deleteFutureAppointments.isPending ? 'Deleting...' : 'Delete'}
                     </button>
                   </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Buy Bundle Modal */}
+      {showBundleForm && (
+        <div className="fixed inset-0 z-50 overflow-y-auto">
+          <div className="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
+            <div className="fixed inset-0 bg-gray-500 bg-opacity-75" onClick={() => setShowBundleForm(false)} />
+            <div className="relative transform overflow-hidden rounded-2xl bg-white px-4 pt-5 pb-4 text-left shadow-xl sm:my-8 sm:w-full sm:max-w-lg sm:p-6">
+              <div className="absolute top-0 right-0 hidden pt-4 pr-4 sm:block">
+                <button
+                  onClick={() => setShowBundleForm(false)}
+                  className="rounded-md bg-white text-gray-400 hover:text-gray-500"
+                >
+                  <XMarkIcon className="h-6 w-6" />
+                </button>
+              </div>
+
+              <div className="sm:flex sm:items-start">
+                <div className="mt-3 text-center sm:mt-0 sm:text-left w-full">
+                  <h3 className="text-lg font-medium leading-6 text-gray-900 mb-4">
+                    Purchase Bundle
+                  </h3>
+
+                  <form onSubmit={handleBundleSubmit(onBundleSubmit)} className="space-y-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Select Bundle *
+                      </label>
+                      <select
+                        {...registerBundle('bundleId', { required: 'Bundle is required' })}
+                        className="input"
+                      >
+                        <option value="">Choose a bundle...</option>
+                        {bundles.map(bundle => (
+                          <option key={bundle.id} value={bundle.id}>
+                            {bundle.name} - ${bundle.price.toFixed(2)}
+                          </option>
+                        ))}
+                      </select>
+                      {bundleErrors.bundleId && (
+                        <p className="mt-1 text-sm text-red-600">{bundleErrors.bundleId.message}</p>
+                      )}
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Amount Paid (Optional)
+                      </label>
+                      <input
+                        {...registerBundle('amountPaid', {
+                          min: { value: 0, message: 'Amount must be positive' }
+                        })}
+                        type="number"
+                        step="0.01"
+                        className="input"
+                        placeholder="Leave empty for full price"
+                      />
+                      <p className="mt-1 text-xs text-gray-500">
+                        If left empty, full price will be charged. Patient receives all credits regardless of payment.
+                      </p>
+                      {bundleErrors.amountPaid && (
+                        <p className="mt-1 text-sm text-red-600">{bundleErrors.amountPaid.message}</p>
+                      )}
+                    </div>
+
+                    <div className="flex justify-end space-x-3 pt-4">
+                      <button
+                        type="button"
+                        onClick={() => setShowBundleForm(false)}
+                        className="btn-secondary"
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        type="submit"
+                        disabled={purchaseBundleMutation.isPending}
+                        className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50"
+                      >
+                        {purchaseBundleMutation.isPending ? 'Purchasing...' : 'Purchase Bundle'}
+                      </button>
+                    </div>
+                  </form>
                 </div>
               </div>
             </div>

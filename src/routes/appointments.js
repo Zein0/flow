@@ -48,14 +48,48 @@ router.get('/', requireAuth, [
     const appointments = await prisma.appointment.findMany({
       where,
       include: {
-        patient: true,
+        patient: {
+          include: {
+            serviceCredits: {
+              include: {
+                sessionType: true
+              }
+            }
+          }
+        },
         doctor: true,
         sessionType: true
       },
       orderBy: { startAt: 'asc' }
     });
 
-    res.json(appointments);
+    // Aggregate service credits for each patient
+    const appointmentsWithCredits = appointments.map(appointment => {
+      const creditsSummary = appointment.patient.serviceCredits.reduce((acc, credit) => {
+        const existing = acc.find(c => c.sessionTypeId === credit.sessionTypeId);
+        if (existing) {
+          existing.quantity += credit.quantity;
+        } else {
+          acc.push({
+            sessionTypeId: credit.sessionTypeId,
+            sessionTypeName: credit.sessionType.name,
+            quantity: credit.quantity
+          });
+        }
+        return acc;
+      }, []);
+
+      return {
+        ...appointment,
+        patient: {
+          ...appointment.patient,
+          creditsSummary,
+          serviceCredits: undefined // Remove raw serviceCredits from response
+        }
+      };
+    });
+
+    res.json(appointmentsWithCredits);
   } catch (error) {
     console.error('GET appointments error:', error);
     res.status(500).json({ error: 'Internal server error' });
@@ -230,7 +264,8 @@ router.post('/', requireAuth, [
 });
 
 router.post('/:id/confirm', requireAuth, [
-  body('finalPrice').optional().isFloat({ min: 0 })
+  body('finalPrice').optional().isFloat({ min: 0 }),
+  body('paymentMethod').optional().isIn(['cash', 'service_credit'])
 ], async (req, res) => {
   try {
     const errors = validationResult(req);
@@ -238,17 +273,18 @@ router.post('/:id/confirm', requireAuth, [
       return res.status(400).json({ errors: errors.array() });
     }
 
-    const { finalPrice } = req.body;
+    const { finalPrice, paymentMethod = 'cash' } = req.body;
 
     const result = await confirmAppointment(req.params.id, {
       finalPrice,
+      paymentMethod,
       createdBy: req.user.id
     });
 
     res.json(result);
   } catch (error) {
     console.error('Confirm appointment error:', error);
-    if (error.message.includes('not found') || error.message.includes('cannot be confirmed')) {
+    if (error.message.includes('not found') || error.message.includes('cannot be confirmed') || error.message.includes('No service credits')) {
       return res.status(400).json({ error: error.message });
     }
     res.status(500).json({ error: 'Internal server error' });

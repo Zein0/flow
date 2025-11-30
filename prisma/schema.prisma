@@ -37,9 +37,10 @@ model Patient {
   creditBalance Float    @default(0)
   createdAt     DateTime @default(now())
 
-  appointments Appointment[]
-  orders       Order[]
-  ledgers      Ledger[]
+  appointments    Appointment[]
+  orders          Order[]
+  ledgers         Ledger[]
+  serviceCredits  ServiceCredit[]
 
   @@map("patients")
 }
@@ -64,8 +65,10 @@ model SessionType {
   durationMinutes Int    @default(60)
   active          Boolean @default(true)
 
-  appointments  Appointment[]
-  sessionLists  SessionList[]
+  appointments    Appointment[]
+  sessionLists    SessionList[]
+  bundleItems     BundleItem[]
+  serviceCredits  ServiceCredit[]
 
   @@map("session_types")
 }
@@ -118,23 +121,32 @@ enum AppointmentStatus {
 }
 
 model Order {
-  id        String      @id @default(cuid())
-  patientId String
+  id            String      @id @default(cuid())
+  patientId     String
   appointmentId String?
-  subtotal  Float
-  discount  Float       @default(0)
-  totalDue  Float
-  status    OrderStatus @default(pending)
-  createdBy String
-  createdAt DateTime    @default(now())
+  bundleId      String?
+  orderType     OrderType   @default(appointment)
+  subtotal      Float
+  discount      Float       @default(0)
+  totalDue      Float
+  status        OrderStatus @default(pending)
+  createdBy     String
+  createdAt     DateTime    @default(now())
 
-  patient       Patient    @relation(fields: [patientId], references: [id])
-  appointment   Appointment? @relation(fields: [appointmentId], references: [id])
-  createdByUser User       @relation("CreatedByUser", fields: [createdBy], references: [id])
+  patient        Patient       @relation(fields: [patientId], references: [id])
+  appointment    Appointment?  @relation(fields: [appointmentId], references: [id])
+  bundle         Bundle?       @relation(fields: [bundleId], references: [id])
+  createdByUser  User          @relation("CreatedByUser", fields: [createdBy], references: [id])
 
-  ledgers Ledger[]
+  ledgers        Ledger[]
+  serviceCredits ServiceCredit[]
 
   @@map("orders")
+}
+
+enum OrderType {
+  appointment
+  bundle
 }
 
 enum OrderStatus {
@@ -173,6 +185,7 @@ enum LedgerKind {
 
 enum PaymentMethod {
   cash
+  service_credit
 }
 
 model Reminder {
@@ -226,6 +239,49 @@ model RecurrenceException {
   recurrence Recurrence @relation(fields: [recurrenceId], references: [id])
 
   @@map("recurrence_exceptions")
+}
+
+model Bundle {
+  id        String   @id @default(cuid())
+  name      String
+  price     Float
+  active    Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  items  BundleItem[]
+  orders Order[]
+
+  @@map("bundles")
+}
+
+model BundleItem {
+  id            String @id @default(cuid())
+  bundleId      String
+  sessionTypeId String
+  quantity      Int
+
+  bundle      Bundle      @relation(fields: [bundleId], references: [id], onDelete: Cascade)
+  sessionType SessionType @relation(fields: [sessionTypeId], references: [id])
+
+  @@unique([bundleId, sessionTypeId])
+  @@map("bundle_items")
+}
+
+model ServiceCredit {
+  id        String   @id @default(cuid())
+  patientId String
+  sessionTypeId String
+  quantity  Int
+  orderId   String
+  createdAt DateTime @default(now())
+
+  patient     Patient     @relation(fields: [patientId], references: [id])
+  sessionType SessionType @relation(fields: [sessionTypeId], references: [id])
+  order       Order       @relation(fields: [orderId], references: [id])
+
+  @@unique([patientId, sessionTypeId, orderId])
+  @@map("service_credits")
 }
 
 model AuditLog {

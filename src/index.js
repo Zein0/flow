@@ -13,6 +13,7 @@ const orderRoutes = require('./routes/orders');
 const ledgerRoutes = require('./routes/ledger');
 const reportRoutes = require('./routes/reports');
 const recurrenceRoutes = require('./routes/recurrences');
+const bundleRoutes = require('./routes/bundles');
 
 const app = express();
 const prisma = new PrismaClient();
@@ -36,6 +37,7 @@ app.use('/api/orders', orderRoutes);
 app.use('/api/ledger', ledgerRoutes);
 app.use('/api/reports', reportRoutes);
 app.use('/api/recurrences', recurrenceRoutes);
+app.use('/api/bundles', bundleRoutes);
 
 app.get('/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });

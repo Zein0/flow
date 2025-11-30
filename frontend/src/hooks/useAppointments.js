@@ -82,17 +82,19 @@ export const useCreateAppointment = () => {
 
 export const useConfirmAppointment = () => {
   const queryClient = useQueryClient();
-  
+
   return useMutation({
-    mutationFn: async ({ appointmentId, finalPrice }) => {
+    mutationFn: async ({ appointmentId, finalPrice, paymentMethod = 'cash' }) => {
       const response = await api.post(`/appointments/${appointmentId}/confirm`, {
-        finalPrice
+        finalPrice,
+        paymentMethod
       });
       return response.data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['appointments'] });
       queryClient.invalidateQueries({ queryKey: ['orders'] });
+      queryClient.invalidateQueries({ queryKey: ['patient'] });
       toast.success('Appointment confirmed');
     },
     onError: (error) => {
