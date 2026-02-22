@@ -261,12 +261,14 @@ export default function Services() {
                   Duration (minutes) *
                 </label>
                 <input
-                  {...register('durationMinutes')}
+                  {...register('durationMinutes', {
+                    required: 'Duration is required',
+                    min: { value: 1, message: 'Duration must be at least 1 minute' }
+                  })}
                   type="number"
-                  value={60}
-                  disabled
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-100 text-gray-500 cursor-not-allowed"
-                  placeholder="60"
+                  min="1"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
+                  placeholder="e.g., 30, 45, 60"
                 />
                 {errors.durationMinutes && (
                   <p className="mt-1 text-sm text-red-600">{errors.durationMinutes.message}</p>

@@ -1,0 +1,176 @@
+Action,Type,Category,Name,Price ($),Duration (min),Bundle Qty,Notes
+DISABLED,Service,—,All existing services,—,—,—,"Set active=false, name appended ' - old'"
+DISABLED,Bundle,—,All existing bundles,—,—,—,"Set active=false, name appended ' - old'"
+,,,,,,
+NEW,Service,Physiotherapy,Physiotherapy,40,60,,
+NEW,Service,Physiotherapy,Manual Therapy with Physio,50,60,,
+NEW,Service,Physiotherapy,Shockwave,50,60,,
+,,,,,,
+NEW,Service,Face,Meso Face,60,60,,
+NEW,Service,Face,PRX 1,85,60,,
+NEW,Service,Face,PRX 2,85,60,,
+NEW,Service,Face,Face Massage,50,60,,"No time specified → default 60"
+NEW,Service,Face,V Slim Face,50,60,,
+,,,,,,
+NEW,Service,Body,EMS 20 min,25,20,,
+NEW,Service,Body,Sport Session 30 min,15,30,,
+NEW,Service,Body,Sport Session 60 min,30,60,,
+NEW,Service,Body,Relaxing Massage 30 min,35,30,,
+NEW,Service,Body,Relaxing Massage 60 min,60,60,,
+NEW,Service,Body,Deep Tissue Massage 30 min,35,30,,
+NEW,Service,Body,Deep Tissue Massage 30 min + Presso 30 min,50,60,,30+30=60 total
+NEW,Service,Body,Deep Tissue Massage 60 min,60,60,,
+NEW,Service,Body,Deep Tissue Massage 60 min + Presso 30 min,75,90,,60+30=90 total
+NEW,Service,Body,Cellulite Massage 60 min,60,60,,
+NEW,Service,Body,Cellulite Massage 60 min + Presso 30 min,75,90,,60+30=90 total
+NEW,Service,Body,Cellulite Massage 30 min,35,30,,
+NEW,Service,Body,Cellulite Massage 30 min + Presso 30 min,50,60,,30+30=60 total
+NEW,Service,Body,Lymphatic Drainage 60 min,60,60,,
+NEW,Service,Body,Lymphatic Drainage 30 min,35,30,,
+NEW,Service,Body,Reflexology 30 min,50,30,,
+NEW,Service,Body,LPG,50,60,,"No time specified → default 60"
+NEW,Service,Body,V Slim 40 min,60,40,,
+NEW,Service,Body,V Slim 30 min,35,30,,
+NEW,Service,Body,V Slim 20 min,30,20,,
+NEW,Service,Body,Presso 20 min,25,20,,
+NEW,Service,Body,Presso 40 min,40,40,,
+NEW,Service,Body,"Head, Shoulder & Neck Massage 40 min",45,40,,
+NEW,Service,Body,Stretching 30 min,35,30,,
+NEW,Service,Body,Stretching 60 min,60,60,,
+NEW,Service,Body,Gut Massage 40 min (Hot Pad),50,40,,
+NEW,Service,Body,Gut Massage 40 min + Presso 20 min,60,60,,40+20=60 total
+NEW,Service,Body,TMJ Session 20 min,35,20,,
+NEW,Service,Body,TMJ + Neck 40 min,50,40,,
+NEW,Service,Body,Wet Cupping,40,60,,"No time specified → default 60"
+,,,,,,
+NEW,Service,Laser,Laser: Bikini,30,60,,No bundles
+NEW,Service,Laser,Laser: Chest,30,60,,No bundles
+NEW,Service,Laser,Laser: Chest & Tummy,45,60,,No bundles
+NEW,Service,Laser,Laser: Chin,15,60,,No bundles
+NEW,Service,Laser,Laser: Face,20,60,,No bundles
+NEW,Service,Laser,Laser: Full Arms,35,60,,No bundles
+NEW,Service,Laser,Laser: Full Back,50,60,,No bundles
+NEW,Service,Laser,Laser: Full Legs,60,60,,No bundles
+NEW,Service,Laser,Laser: Half Arms,20,60,,No bundles
+NEW,Service,Laser,Laser: Half Leg,30,60,,No bundles
+NEW,Service,Laser,Laser: Lower Back,30,60,,No bundles
+NEW,Service,Laser,Laser: Moustache,15,60,,No bundles
+NEW,Service,Laser,Laser: Moustache & Chin,35,60,,No bundles
+NEW,Service,Laser,Laser: Tummy,35,60,,No bundles
+NEW,Service,Laser,Laser: Underarm,20,60,,No bundles
+NEW,Service,Laser,Laser: Upper Back,30,60,,No bundles
+NEW,Service,Laser,Laser: Full Body,100,60,,No bundles
+,,,,,,
+NEW,Service,Meso Body,Meso Body: Firming (1 Ampoule),50,60,,No bundles
+NEW,Service,Meso Body,Meso Body: Body Contouring,60,60,,No bundles
+,,,,,,
+,,,,,,
+NEW,Bundle,Physiotherapy,Physiotherapy: 7 Sessions,240,,7,7x Physiotherapy
+NEW,Bundle,Physiotherapy,Physiotherapy: 15 Sessions,480,,15,15x Physiotherapy
+,,,,,,
+NEW,Bundle,Face,Meso Face: 3 Sessions,150,,3,3x Meso Face
+NEW,Bundle,Face,Meso Face: 6 Sessions,320,,6,6x Meso Face
+NEW,Bundle,Face,Meso Face: 10 Sessions,500,,10,10x Meso Face
+NEW,Bundle,Face,PRX 1: 3 Sessions,240,,3,3x PRX 1
+NEW,Bundle,Face,PRX 1: 6 Sessions,480,,6,6x PRX 1
+NEW,Bundle,Face,PRX 1: 10 Sessions,750,,10,10x PRX 1
+NEW,Bundle,Face,PRX 2: 3 Sessions,240,,3,3x PRX 2
+NEW,Bundle,Face,PRX 2: 6 Sessions,480,,6,6x PRX 2
+NEW,Bundle,Face,PRX 2: 10 Sessions,750,,10,10x PRX 2
+NEW,Bundle,Face,Face Massage: 3 Sessions,140,,3,3x Face Massage
+NEW,Bundle,Face,Face Massage: 6 Sessions,250,,6,6x Face Massage
+NEW,Bundle,Face,Face Massage: 10 Sessions,400,,10,10x Face Massage
+NEW,Bundle,Face,V Slim Face: 3 Sessions,140,,3,3x V Slim Face
+NEW,Bundle,Face,V Slim Face: 6 Sessions,250,,6,6x V Slim Face
+NEW,Bundle,Face,V Slim Face: 10 Sessions,400,,10,10x V Slim Face
+,,,,,,
+NEW,Bundle,Body,EMS 20 min: 3 Sessions,65,,3,3x EMS 20 min
+NEW,Bundle,Body,EMS 20 min: 6 Sessions,100,,6,6x EMS 20 min
+NEW,Bundle,Body,EMS 20 min: 10 Sessions,200,,10,10x EMS 20 min
+NEW,Bundle,Body,Sport Session 30 min: 3 Sessions,40,,3,3x Sport Session 30 min
+NEW,Bundle,Body,Sport Session 30 min: 6 Sessions,80,,6,6x Sport Session 30 min
+NEW,Bundle,Body,Sport Session 30 min: 10 Sessions,100,,10,10x Sport Session 30 min
+NEW,Bundle,Body,Sport Session 60 min: 3 Sessions,80,,3,3x Sport Session 60 min
+NEW,Bundle,Body,Sport Session 60 min: 6 Sessions,150,,6,6x Sport Session 60 min
+NEW,Bundle,Body,Sport Session 60 min: 10 Sessions,250,,10,10x Sport Session 60 min
+NEW,Bundle,Body,Relaxing Massage 30 min: 3 Sessions,100,,3,3x Relaxing Massage 30 min
+NEW,Bundle,Body,Relaxing Massage 30 min: 6 Sessions,180,,6,6x Relaxing Massage 30 min
+NEW,Bundle,Body,Relaxing Massage 30 min: 10 Sessions,300,,10,10x Relaxing Massage 30 min
+NEW,Bundle,Body,Relaxing Massage 60 min: 3 Sessions,150,,3,3x Relaxing Massage 60 min
+NEW,Bundle,Body,Relaxing Massage 60 min: 6 Sessions,300,,6,6x Relaxing Massage 60 min
+NEW,Bundle,Body,Relaxing Massage 60 min: 10 Sessions,500,,10,10x Relaxing Massage 60 min
+NEW,Bundle,Body,Deep Tissue Massage 30 min: 3 Sessions,100,,3,3x Deep Tissue Massage 30 min
+NEW,Bundle,Body,Deep Tissue Massage 30 min: 6 Sessions,180,,6,6x Deep Tissue Massage 30 min
+NEW,Bundle,Body,Deep Tissue Massage 30 min: 10 Sessions,300,,10,10x Deep Tissue Massage 30 min
+NEW,Bundle,Body,Deep Tissue 30 min + Presso 30 min: 3 Sessions,130,,3,3x Deep Tissue 30+Presso 30
+NEW,Bundle,Body,Deep Tissue 30 min + Presso 30 min: 6 Sessions,250,,6,6x Deep Tissue 30+Presso 30
+NEW,Bundle,Body,Deep Tissue 30 min + Presso 30 min: 10 Sessions,400,,10,10x Deep Tissue 30+Presso 30
+NEW,Bundle,Body,Deep Tissue Massage 60 min: 3 Sessions,150,,3,3x Deep Tissue Massage 60 min
+NEW,Bundle,Body,Deep Tissue Massage 60 min: 6 Sessions,300,,6,6x Deep Tissue Massage 60 min
+NEW,Bundle,Body,Deep Tissue Massage 60 min: 10 Sessions,500,,10,10x Deep Tissue Massage 60 min
+NEW,Bundle,Body,Deep Tissue 60 min + Presso 30 min: 3 Sessions,200,,3,3x Deep Tissue 60+Presso 30
+NEW,Bundle,Body,Deep Tissue 60 min + Presso 30 min: 6 Sessions,400,,6,6x Deep Tissue 60+Presso 30
+NEW,Bundle,Body,Deep Tissue 60 min + Presso 30 min: 10 Sessions,650,,10,10x Deep Tissue 60+Presso 30
+NEW,Bundle,Body,Cellulite Massage 60 min: 3 Sessions,150,,3,3x Cellulite Massage 60 min
+NEW,Bundle,Body,Cellulite Massage 60 min: 6 Sessions,300,,6,6x Cellulite Massage 60 min
+NEW,Bundle,Body,Cellulite Massage 60 min: 10 Sessions,500,,10,10x Cellulite Massage 60 min
+NEW,Bundle,Body,Cellulite 60 min + Presso 30 min: 3 Sessions,200,,3,3x Cellulite 60+Presso 30
+NEW,Bundle,Body,Cellulite 60 min + Presso 30 min: 6 Sessions,400,,6,6x Cellulite 60+Presso 30
+NEW,Bundle,Body,Cellulite 60 min + Presso 30 min: 10 Sessions,650,,10,10x Cellulite 60+Presso 30
+NEW,Bundle,Body,Cellulite Massage 30 min: 3 Sessions,100,,3,3x Cellulite Massage 30 min
+NEW,Bundle,Body,Cellulite Massage 30 min: 6 Sessions,180,,6,6x Cellulite Massage 30 min
+NEW,Bundle,Body,Cellulite Massage 30 min: 10 Sessions,300,,10,10x Cellulite Massage 30 min
+NEW,Bundle,Body,Cellulite 30 min + Presso 30 min: 3 Sessions,130,,3,3x Cellulite 30+Presso 30
+NEW,Bundle,Body,Cellulite 30 min + Presso 30 min: 6 Sessions,250,,6,6x Cellulite 30+Presso 30
+NEW,Bundle,Body,Cellulite 30 min + Presso 30 min: 10 Sessions,400,,10,10x Cellulite 30+Presso 30
+NEW,Bundle,Body,Lymphatic Drainage 60 min: 3 Sessions,150,,3,3x Lymphatic Drainage 60 min
+NEW,Bundle,Body,Lymphatic Drainage 60 min: 6 Sessions,300,,6,6x Lymphatic Drainage 60 min
+NEW,Bundle,Body,Lymphatic Drainage 60 min: 10 Sessions,500,,10,10x Lymphatic Drainage 60 min
+NEW,Bundle,Body,Lymphatic Drainage 30 min: 3 Sessions,100,,3,3x Lymphatic Drainage 30 min
+NEW,Bundle,Body,Lymphatic Drainage 30 min: 6 Sessions,180,,6,6x Lymphatic Drainage 30 min
+NEW,Bundle,Body,Lymphatic Drainage 30 min: 10 Sessions,300,,10,10x Lymphatic Drainage 30 min
+NEW,Bundle,Body,Reflexology 30 min: 3 Sessions,130,,3,3x Reflexology 30 min
+NEW,Bundle,Body,Reflexology 30 min: 6 Sessions,250,,6,6x Reflexology 30 min
+NEW,Bundle,Body,Reflexology 30 min: 10 Sessions,400,,10,10x Reflexology 30 min
+NEW,Bundle,Body,LPG: 3 Sessions,130,,3,3x LPG
+NEW,Bundle,Body,LPG: 6 Sessions,250,,6,6x LPG
+NEW,Bundle,Body,LPG: 10 Sessions,400,,10,10x LPG
+NEW,Bundle,Body,V Slim 40 min: 3 Sessions,150,,3,3x V Slim 40 min
+NEW,Bundle,Body,V Slim 40 min: 6 Sessions,300,,6,6x V Slim 40 min
+NEW,Bundle,Body,V Slim 40 min: 10 Sessions,500,,10,10x V Slim 40 min
+NEW,Bundle,Body,V Slim 30 min: 3 Sessions,100,,3,3x V Slim 30 min
+NEW,Bundle,Body,V Slim 30 min: 6 Sessions,180,,6,6x V Slim 30 min
+NEW,Bundle,Body,V Slim 30 min: 10 Sessions,300,,10,10x V Slim 30 min
+NEW,Bundle,Body,V Slim 20 min: 3 Sessions,80,,3,3x V Slim 20 min
+NEW,Bundle,Body,V Slim 20 min: 6 Sessions,150,,6,6x V Slim 20 min
+NEW,Bundle,Body,V Slim 20 min: 10 Sessions,250,,10,10x V Slim 20 min
+NEW,Bundle,Body,Presso 20 min: 3 Sessions,65,,3,3x Presso 20 min
+NEW,Bundle,Body,Presso 20 min: 6 Sessions,100,,6,6x Presso 20 min
+NEW,Bundle,Body,Presso 20 min: 10 Sessions,200,,10,10x Presso 20 min
+NEW,Bundle,Body,Presso 40 min: 3 Sessions,100,,3,3x Presso 40 min
+NEW,Bundle,Body,Presso 40 min: 6 Sessions,200,,6,6x Presso 40 min
+NEW,Bundle,Body,Presso 40 min: 10 Sessions,350,,10,10x Presso 40 min
+NEW,Bundle,Body,"Head, Shoulder & Neck 40 min: 3 Sessions",110,,3,"3x Head, Shoulder & Neck"
+NEW,Bundle,Body,"Head, Shoulder & Neck 40 min: 6 Sessions",220,,6,"6x Head, Shoulder & Neck"
+NEW,Bundle,Body,"Head, Shoulder & Neck 40 min: 10 Sessions",400,,10,"10x Head, Shoulder & Neck"
+NEW,Bundle,Body,Stretching 30 min: 3 Sessions,100,,3,3x Stretching 30 min
+NEW,Bundle,Body,Stretching 30 min: 6 Sessions,180,,6,6x Stretching 30 min
+NEW,Bundle,Body,Stretching 30 min: 10 Sessions,300,,10,10x Stretching 30 min
+NEW,Bundle,Body,Stretching 60 min: 3 Sessions,150,,3,3x Stretching 60 min
+NEW,Bundle,Body,Stretching 60 min: 6 Sessions,300,,6,6x Stretching 60 min
+NEW,Bundle,Body,Stretching 60 min: 10 Sessions,500,,10,10x Stretching 60 min
+NEW,Bundle,Body,Gut Massage 40 min (Hot Pad): 3 Sessions,130,,3,3x Gut Massage (Hot Pad)
+NEW,Bundle,Body,Gut Massage 40 min (Hot Pad): 6 Sessions,250,,6,6x Gut Massage (Hot Pad)
+NEW,Bundle,Body,Gut Massage 40 min (Hot Pad): 10 Sessions,400,,10,10x Gut Massage (Hot Pad)
+NEW,Bundle,Body,Gut Massage 40 min + Presso 20 min: 3 Sessions,150,,3,3x Gut Massage+Presso
+NEW,Bundle,Body,Gut Massage 40 min + Presso 20 min: 6 Sessions,300,,6,6x Gut Massage+Presso
+NEW,Bundle,Body,Gut Massage 40 min + Presso 20 min: 10 Sessions,500,,10,10x Gut Massage+Presso
+NEW,Bundle,Body,TMJ Session 20 min: 3 Sessions,100,,3,3x TMJ Session 20 min
+NEW,Bundle,Body,TMJ Session 20 min: 6 Sessions,180,,6,6x TMJ Session 20 min
+NEW,Bundle,Body,TMJ Session 20 min: 10 Sessions,300,,10,10x TMJ Session 20 min
+NEW,Bundle,Body,TMJ + Neck 40 min: 3 Sessions,130,,3,3x TMJ + Neck 40 min
+NEW,Bundle,Body,TMJ + Neck 40 min: 6 Sessions,250,,6,6x TMJ + Neck 40 min
+NEW,Bundle,Body,TMJ + Neck 40 min: 10 Sessions,400,,10,10x TMJ + Neck 40 min
+NEW,Bundle,Body,Wet Cupping: 3 Sessions,100,,3,3x Wet Cupping
+NEW,Bundle,Body,Wet Cupping: 6 Sessions,200,,6,6x Wet Cupping
+NEW,Bundle,Body,Wet Cupping: 10 Sessions,350,,10,10x Wet Cupping

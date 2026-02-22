@@ -45,14 +45,15 @@ export const useAvailability = (date, doctorId) => {
   });
 };
 
-export const useAvailableDoctors = (date, hour) => {
+export const useAvailableDoctors = (date, hour, minute = 0) => {
   return useQuery({
-    queryKey: ['available-doctors', format(date, 'yyyy-MM-dd'), hour],
+    queryKey: ['available-doctors', format(date, 'yyyy-MM-dd'), hour, minute],
     queryFn: async () => {
       const response = await api.get('/appointments/available-doctors', {
         params: {
           date: format(date, 'yyyy-MM-dd'),
-          hour
+          hour,
+          minute
         }
       });
       return response.data;

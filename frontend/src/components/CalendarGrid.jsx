@@ -115,8 +115,7 @@ export default function CalendarGrid() {
                                 </p>
                                 <p className="text-xs text-gray-400 mt-0.5 sm:mt-1">
                                   {format(new Date(appointment.startAt), 'h:mm a')} - {format(new Date(appointment.endAt), 'h:mm a')}
-                                  {duration === 60 && <span className="ml-1">(60 min)</span>}
-                                  {duration === 30 && <span className="ml-1">(30 min)</span>}
+                                  <span className="ml-1">({duration} min)</span>
                                 </p>
                               </div>
                               <span className={`inline-flex items-center px-2 py-0.5 sm:py-1 rounded-full text-xs font-medium flex-shrink-0 self-start sm:self-auto ${

@@ -179,7 +179,8 @@ router.get('/availability', requireAuth, [
 
 router.get('/available-doctors', requireAuth, [
   query('date').isISO8601(),
-  query('hour').isInt({ min: 0, max: 23 })
+  query('hour').isInt({ min: 0, max: 23 }),
+  query('minute').optional().isInt({ min: 0, max: 59 })
 ], async (req, res) => {
   try {
     const errors = validationResult(req);
@@ -187,22 +188,21 @@ router.get('/available-doctors', requireAuth, [
       return res.status(400).json({ errors: errors.array() });
     }
 
-    const { date, hour } = req.query;
-    const startTime = new Date(date);
-    startTime.setHours(parseInt(hour), 0, 0, 0);
-    const endTime = new Date(startTime);
-    endTime.setHours(startTime.getHours() + 1);
+    const { date, hour, minute = 0 } = req.query;
+    const slotTime = new Date(date);
+    slotTime.setHours(parseInt(hour), parseInt(minute), 0, 0);
 
-    // Get doctors who don't have appointments at this hour
+    // Find doctors who have an appointment overlapping with the selected time point
     const busyDoctors = await prisma.appointment.findMany({
       where: {
-        startAt: { gte: startTime, lt: endTime },
+        startAt: { lte: slotTime },
+        endAt: { gt: slotTime },
         status: { not: 'cancelled' }
       },
       select: { doctorId: true }
     });
 
-    const busyDoctorIds = busyDoctors.map(apt => apt.doctorId);
+    const busyDoctorIds = [...new Set(busyDoctors.map(apt => apt.doctorId))];
 
     // Get available doctors with their session offerings
     const availableDoctors = await prisma.doctor.findMany({
@@ -214,6 +214,11 @@ router.get('/available-doctors', requireAuth, [
         sessionLists: {
           include: {
             sessionType: true
+          },
+          where: {
+            sessionType: {
+              active: true
+            }
           }
         }
       }

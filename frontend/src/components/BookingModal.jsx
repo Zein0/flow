@@ -17,7 +17,7 @@ export default function BookingModal() {
   const [showNewPatientForm, setShowNewPatientForm] = useState(false);
 
   const { data: patients = [] } = usePatients(patientQuery);
-  const { data: availableDoctors = [] } = useAvailableDoctors(selectedDate, selectedDate?.getHours());
+  const { data: availableDoctors = [] } = useAvailableDoctors(selectedDate, selectedDate?.getHours(), selectedDate?.getMinutes());
 
   // Generate 30-minute time slots from 8 AM to 6 PM
   const timeSlots = [];
@@ -129,7 +129,7 @@ export default function BookingModal() {
                       value={format(selectedDate, 'yyyy-MM-dd')}
                       onChange={(e) => {
                         const newDate = new Date(e.target.value);
-                        newDate.setHours(selectedDate.getHours(), 0, 0, 0);
+                        newDate.setHours(selectedDate.getHours(), selectedDate.getMinutes(), 0, 0);
                         setSelectedDate(newDate);
                       }}
                       className="input"
@@ -323,7 +323,7 @@ export default function BookingModal() {
                           <option value="">Select session type</option>
                           {selectedDoctorData.sessionLists.map(sessionList => (
                             <option key={sessionList.id} value={sessionList.sessionTypeId}>
-                              {sessionList.sessionType.name} - ${sessionList.customPrice || sessionList.sessionType.price}
+                              {sessionList.sessionType.name} - ${sessionList.customPrice || sessionList.sessionType.price} ({sessionList.sessionType.durationMinutes} min)
                             </option>
                           ))}
                         </select>
