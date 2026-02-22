@@ -179,6 +179,56 @@ router.put('/:id', requireAdmin, [
   }
 });
 
+// Add all active session types to doctor (skips duplicates)
+router.post('/:id/sessions/add-all', requireAdmin, async (req, res) => {
+  try {
+    const doctorId = req.params.id;
+
+    const doctor = await prisma.doctor.findUnique({ where: { id: doctorId } });
+    if (!doctor) {
+      return res.status(404).json({ error: 'Doctor not found' });
+    }
+
+    const [activeSessionTypes, existingLists] = await Promise.all([
+      prisma.sessionType.findMany({ where: { active: true }, select: { id: true, price: true } }),
+      prisma.sessionList.findMany({ where: { doctorId }, select: { sessionTypeId: true } })
+    ]);
+
+    const existingIds = new Set(existingLists.map(sl => sl.sessionTypeId));
+    const toAdd = activeSessionTypes.filter(st => !existingIds.has(st.id));
+
+    if (toAdd.length === 0) {
+      return res.json({ added: 0, message: 'Doctor already has all active sessions' });
+    }
+
+    await prisma.$transaction(async (tx) => {
+      await tx.sessionList.createMany({
+        data: toAdd.map(st => ({
+          doctorId,
+          sessionTypeId: st.id,
+          customPrice: st.price
+        })),
+        skipDuplicates: true
+      });
+
+      await tx.auditLog.create({
+        data: {
+          actorId: req.user.id,
+          action: 'doctor.add_all_sessions',
+          targetType: 'doctor',
+          targetId: doctorId,
+          metadata: { addedCount: toAdd.length }
+        }
+      });
+    });
+
+    res.json({ added: toAdd.length, message: `Added ${toAdd.length} sessions` });
+  } catch (error) {
+    console.error('Add all sessions error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
 // Add session to doctor
 router.post('/:id/sessions', requireAdmin, [
   body('sessionTypeId').isString(),

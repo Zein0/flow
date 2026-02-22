@@ -60,6 +60,25 @@ export const useUpdateDoctor = () => {
   });
 };
 
+export const useAddAllDoctorSessions = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (doctorId) => {
+      const response = await api.post(`/doctors/${doctorId}/sessions/add-all`);
+      return response.data;
+    },
+    onSuccess: (data, doctorId) => {
+      queryClient.invalidateQueries({ queryKey: ['doctors'] });
+      queryClient.invalidateQueries({ queryKey: ['doctor', doctorId] });
+      toast.success(data.message || 'All sessions added');
+    },
+    onError: (error) => {
+      toast.error(error.response?.data?.error || 'Failed to add all sessions');
+    }
+  });
+};
+
 export const useAddDoctorSession = () => {
   const queryClient = useQueryClient();
   

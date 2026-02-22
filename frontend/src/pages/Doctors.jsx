@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { PlusIcon, UserIcon, TrashIcon, PencilIcon } from '@heroicons/react/24/outline';
-import { useDoctors, useCreateDoctor, useUpdateDoctor, useAddDoctorSession, useUpdateDoctorSession, useDeleteDoctorSession } from '../hooks/useDoctors';
+import { useDoctors, useCreateDoctor, useUpdateDoctor, useAddDoctorSession, useAddAllDoctorSessions, useUpdateDoctorSession, useDeleteDoctorSession } from '../hooks/useDoctors';
 import { useSessionTypes } from '../hooks/useSessionTypes';
 import { useAuthStore } from '../stores/auth';
 import { useForm } from 'react-hook-form';
@@ -19,6 +19,7 @@ export default function Doctors() {
   const createDoctor = useCreateDoctor();
   const updateDoctor = useUpdateDoctor();
   const addSession = useAddDoctorSession();
+  const addAllSessions = useAddAllDoctorSessions();
   const updateSession = useUpdateDoctorSession();
   const deleteSession = useDeleteDoctorSession();
   
@@ -281,6 +282,24 @@ export default function Doctors() {
             </div>
           </div>
           <div className="card-body space-y-4">
+            {/* Add All Sessions Button */}
+            {isAdmin && (
+              <button
+                onClick={async () => {
+                  await addAllSessions.mutateAsync(managingSessions.id);
+                  await queryClient.refetchQueries({ queryKey: ['doctors'] });
+                  const refreshedDoctors = queryClient.getQueryData(['doctors']);
+                  const updatedDoctor = refreshedDoctors?.find(d => d.id === managingSessions.id);
+                  if (updatedDoctor) setManagingSessions(updatedDoctor);
+                }}
+                disabled={addAllSessions.isPending}
+                className="w-full inline-flex items-center justify-center px-4 py-2 border border-primary-600 text-sm font-medium rounded-md text-primary-700 bg-primary-50 hover:bg-primary-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 disabled:opacity-50"
+              >
+                <PlusIcon className="h-4 w-4 mr-2" />
+                {addAllSessions.isPending ? 'Adding...' : 'Add All Active Sessions'}
+              </button>
+            )}
+
             <form onSubmit={handleSessionSubmit(onSessionSubmit)} className="space-y-4">
               {!editingSession && (
                 <div>
