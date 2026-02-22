@@ -1,14 +1,19 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { PlusIcon, PencilIcon, TrashIcon, XMarkIcon } from '@heroicons/react/24/outline';
+import { PlusIcon, PencilIcon, TrashIcon, XMarkIcon, MagnifyingGlassIcon, ChevronLeftIcon, ChevronRightIcon, EyeSlashIcon, EyeIcon } from '@heroicons/react/24/outline';
 import { useForm, useFieldArray } from 'react-hook-form';
 import { toast } from 'react-hot-toast';
 import api from '../utils/api';
 
+const PAGE_SIZE = 15;
+
 export default function Bundles() {
   const [showForm, setShowForm] = useState(false);
   const [editingBundle, setEditingBundle] = useState(null);
-  const [showActiveOnly, setShowActiveOnly] = useState(true);
+  const [statusFilter, setStatusFilter] = useState('active'); // 'all' | 'active' | 'inactive'
+  const [searchInput, setSearchInput] = useState('');
+  const [search, setSearch] = useState('');
+  const [page, setPage] = useState(1);
   const queryClient = useQueryClient();
 
   const { register, handleSubmit, reset, control, formState: { errors } } = useForm({
@@ -25,14 +30,33 @@ export default function Bundles() {
     name: 'items'
   });
 
-  // Fetch bundles
-  const { data: bundles = [], isLoading } = useQuery({
-    queryKey: ['bundles', showActiveOnly],
+  // Debounce search input
+  useEffect(() => {
+    const t = setTimeout(() => { setSearch(searchInput); setPage(1); }, 300);
+    return () => clearTimeout(t);
+  }, [searchInput]);
+
+  const handleStatusFilter = (v) => { setStatusFilter(v); setPage(1); };
+
+  // Fetch bundles from backend with search/filter/pagination
+  const { data: result, isLoading } = useQuery({
+    queryKey: ['bundles', { search, status: statusFilter, page }],
     queryFn: async () => {
-      const response = await api.get(`/bundles${showActiveOnly ? '?active=true' : ''}`);
+      const params = new URLSearchParams();
+      params.set('page', page);
+      params.set('limit', PAGE_SIZE);
+      if (statusFilter !== 'all') params.set('status', statusFilter);
+      if (search.trim()) params.set('search', search.trim());
+      const response = await api.get(`/bundles?${params.toString()}`);
       return response.data;
-    }
+    },
+    keepPreviousData: true,
   });
+
+  const bundles = result?.data ?? [];
+  const totalPages = result?.totalPages ?? 1;
+  const total = result?.total ?? 0;
+  const currentPage = result?.page ?? 1;
 
   // Fetch session types
   const { data: sessionTypes = [] } = useQuery({
@@ -149,101 +173,193 @@ export default function Bundles() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Bundles</h1>
           <p className="mt-1 text-sm text-gray-500">
             Create and manage service bundles
           </p>
         </div>
+        <button
+          onClick={() => setShowForm(true)}
+          className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
+        >
+          <PlusIcon className="w-4 h-4 mr-2" />
+          New Bundle
+        </button>
+      </div>
 
-        <div className="flex items-center space-x-3 mt-4 sm:mt-0">
-          <label className="inline-flex items-center">
-            <input
-              type="checkbox"
-              checked={showActiveOnly}
-              onChange={(e) => setShowActiveOnly(e.target.checked)}
-              className="rounded border-gray-300 text-primary-600 focus:ring-primary-500"
-            />
-            <span className="ml-2 text-sm text-gray-700">Active only</span>
-          </label>
-
-          <button
-            onClick={() => setShowForm(true)}
-            className="btn-primary"
-          >
-            <PlusIcon className="w-4 h-4 mr-2" />
-            New Bundle
-          </button>
+      {/* Search + Filters */}
+      <div className="flex flex-col sm:flex-row gap-3">
+        <div className="relative flex-1">
+          <MagnifyingGlassIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+          <input
+            type="text"
+            placeholder="Search bundles or included services..."
+            value={searchInput}
+            onChange={(e) => setSearchInput(e.target.value)}
+            className="w-full pl-9 pr-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+          />
+        </div>
+        <div className="flex rounded-md shadow-sm">
+          {[
+            { key: 'all', label: 'All' },
+            { key: 'active', label: 'Active' },
+            { key: 'inactive', label: 'Inactive' },
+          ].map((opt, i) => (
+            <button
+              key={opt.key}
+              onClick={() => handleStatusFilter(opt.key)}
+              className={`px-4 py-2 text-sm font-medium border ${
+                i === 0 ? 'rounded-l-md' : i === 2 ? 'rounded-r-md -ml-px' : '-ml-px'
+              } ${
+                statusFilter === opt.key
+                  ? 'bg-primary-600 text-white border-primary-600 z-10'
+                  : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
+              }`}
+            >
+              {opt.label}
+            </button>
+          ))}
         </div>
       </div>
 
-      {bundles.length === 0 ? (
-        <div className="card">
-          <div className="card-body text-center py-12">
-            <p className="text-gray-500">No bundles found</p>
-            <button
-              onClick={() => setShowForm(true)}
-              className="btn-primary mt-4"
-            >
-              Create your first bundle
-            </button>
+      {/* Bundles Table */}
+      <div className="bg-white shadow-sm rounded-lg border border-gray-200">
+        {bundles.length === 0 ? (
+          <div className="p-8 text-center text-gray-500">
+            {!search && statusFilter === 'all' ? (
+              <>
+                <PlusIcon className="mx-auto h-12 w-12 text-gray-400 mb-4" />
+                <p className="text-lg font-medium">No bundles found</p>
+                <p className="text-sm">Create your first bundle to get started.</p>
+              </>
+            ) : (
+              <p className="text-sm">No bundles match your filters.</p>
+            )}
           </div>
-        </div>
-      ) : (
-        <div className="grid gap-4">
-          {bundles.map(bundle => (
-            <div key={bundle.id} className="card">
-              <div className="card-body">
-                <div className="flex items-start justify-between">
-                  <div className="flex-1">
-                    <div className="flex items-center space-x-3">
-                      <h3 className="text-lg font-medium text-gray-900">
-                        {bundle.name}
-                      </h3>
-                      {!bundle.active && (
-                        <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
-                          Inactive
+        ) : (
+          <>
+            <div className="overflow-x-auto scrollbar-hide" style={{ maxWidth: '100vw' }}>
+              <table className="min-w-full divide-y divide-gray-200">
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Bundle Name
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Price
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Included Services
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Status
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Actions
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="bg-white divide-y divide-gray-200">
+                  {bundles.map((bundle) => (
+                    <tr key={bundle.id} className="hover:bg-gray-50">
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="text-sm font-medium text-gray-900">
+                          {bundle.name}
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="text-sm font-semibold text-primary-600">
+                          ${bundle.price.toFixed(2)}
+                        </div>
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="flex flex-wrap gap-1">
+                          {bundle.items.map((item) => (
+                            <span
+                              key={item.id}
+                              className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-50 text-blue-700"
+                            >
+                              {item.quantity}x {item.sessionType.name}
+                            </span>
+                          ))}
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                          bundle.active
+                            ? 'bg-green-100 text-green-800'
+                            : 'bg-gray-100 text-gray-800'
+                        }`}>
+                          {bundle.active ? 'Active' : 'Inactive'}
                         </span>
-                      )}
-                    </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
+                        <button
+                          onClick={() => handleEdit(bundle)}
+                          className="inline-flex items-center px-3 py-1 border border-transparent text-xs font-medium rounded-md text-blue-700 bg-blue-100 hover:bg-blue-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                        >
+                          <PencilIcon className="h-4 w-4 mr-1" />
+                          Edit
+                        </button>
+                        <button
+                          onClick={() => handleDelete(bundle.id)}
+                          disabled={deleteBundleMutation.isPending}
+                          className="inline-flex items-center px-3 py-1 border border-transparent text-xs font-medium rounded-md text-red-700 bg-red-100 hover:bg-red-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+                        >
+                          <TrashIcon className="h-4 w-4 mr-1" />
+                          Delete
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
 
-                    <p className="text-2xl font-bold text-primary-600 mt-2">
-                      ${bundle.price.toFixed(2)}
-                    </p>
-
-                    <div className="mt-4 space-y-2">
-                      <p className="text-sm font-medium text-gray-700">Includes:</p>
-                      <ul className="space-y-1">
-                        {bundle.items.map(item => (
-                          <li key={item.id} className="text-sm text-gray-600">
-                            {item.quantity}x {item.sessionType.name}
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                  </div>
-
-                  <div className="flex space-x-2 ml-4">
+            {/* Pagination */}
+            {totalPages > 1 && (
+              <div className="flex items-center justify-between px-6 py-3 border-t border-gray-200">
+                <p className="text-sm text-gray-700">
+                  Showing <span className="font-medium">{(currentPage - 1) * PAGE_SIZE + 1}</span> to{' '}
+                  <span className="font-medium">{Math.min(currentPage * PAGE_SIZE, total)}</span> of{' '}
+                  <span className="font-medium">{total}</span> bundles
+                </p>
+                <div className="flex items-center space-x-2">
+                  <button
+                    onClick={() => setPage(p => Math.max(1, p - 1))}
+                    disabled={currentPage === 1}
+                    className="p-2 rounded-md border border-gray-300 text-gray-500 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed"
+                  >
+                    <ChevronLeftIcon className="h-4 w-4" />
+                  </button>
+                  {Array.from({ length: totalPages }, (_, i) => i + 1).map(p => (
                     <button
-                      onClick={() => handleEdit(bundle)}
-                      className="p-2 text-gray-400 hover:text-gray-600"
+                      key={p}
+                      onClick={() => setPage(p)}
+                      className={`px-3 py-1 rounded-md text-sm font-medium ${
+                        p === currentPage
+                          ? 'bg-primary-600 text-white'
+                          : 'text-gray-700 hover:bg-gray-50'
+                      }`}
                     >
-                      <PencilIcon className="w-5 h-5" />
+                      {p}
                     </button>
-                    <button
-                      onClick={() => handleDelete(bundle.id)}
-                      className="p-2 text-gray-400 hover:text-red-600"
-                    >
-                      <TrashIcon className="w-5 h-5" />
-                    </button>
-                  </div>
+                  ))}
+                  <button
+                    onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+                    disabled={currentPage === totalPages}
+                    className="p-2 rounded-md border border-gray-300 text-gray-500 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed"
+                  >
+                    <ChevronRightIcon className="h-4 w-4" />
+                  </button>
                 </div>
               </div>
-            </div>
-          ))}
-        </div>
-      )}
+            )}
+          </>
+        )}
+      </div>
 
       {/* Bundle Form Modal */}
       {showForm && (

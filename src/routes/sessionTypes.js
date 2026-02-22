@@ -6,10 +6,42 @@ const { requireAuth, requireAdmin } = require('../middleware/auth');
 const router = express.Router();
 const prisma = new PrismaClient();
 
-// Get all session types
+// Get all session types (supports ?search, ?status, ?page, ?limit)
 router.get('/', requireAuth, async (req, res) => {
   try {
+    const { search, status, page, limit } = req.query;
+
+    // Build where clause
+    const where = {};
+    if (status === 'active') where.active = true;
+    else if (status === 'hidden') where.active = false;
+
+    if (search && search.trim()) {
+      where.name = { contains: search.trim(), mode: 'insensitive' };
+    }
+
+    // If pagination params provided, return paginated response
+    if (page || limit) {
+      const take = Math.min(parseInt(limit) || 15, 100);
+      const skip = ((parseInt(page) || 1) - 1) * take;
+
+      const [data, total] = await Promise.all([
+        prisma.sessionType.findMany({ where, orderBy: { name: 'asc' }, skip, take }),
+        prisma.sessionType.count({ where })
+      ]);
+
+      return res.json({
+        data,
+        total,
+        page: parseInt(page) || 1,
+        limit: take,
+        totalPages: Math.ceil(total / take)
+      });
+    }
+
+    // No pagination — return flat array (backward compatible)
     const sessionTypes = await prisma.sessionType.findMany({
+      where,
       orderBy: { name: 'asc' }
     });
     res.json(sessionTypes);

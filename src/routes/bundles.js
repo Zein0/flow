@@ -6,28 +6,56 @@ const { requireAuth, requireAdmin } = require('../middleware/auth');
 const router = express.Router();
 const prisma = new PrismaClient();
 
-// Get all bundles
+// Get all bundles (supports ?search, ?status, ?active, ?page, ?limit)
 router.get('/', requireAuth, async (req, res) => {
   try {
-    const { active } = req.query;
+    const { search, status, active, page, limit } = req.query;
 
-    let where = {};
-    if (active === 'true') {
-      where.active = true;
+    // Build where clause
+    const where = {};
+    // Legacy support: ?active=true
+    if (active === 'true') where.active = true;
+    // New filter: ?status=active|inactive
+    if (status === 'active') where.active = true;
+    else if (status === 'inactive') where.active = false;
+
+    if (search && search.trim()) {
+      const q = search.trim();
+      where.OR = [
+        { name: { contains: q, mode: 'insensitive' } },
+        { items: { some: { sessionType: { name: { contains: q, mode: 'insensitive' } } } } }
+      ];
     }
 
+    const include = {
+      items: { include: { sessionType: true } }
+    };
+
+    // If pagination params provided, return paginated response
+    if (page || limit) {
+      const take = Math.min(parseInt(limit) || 15, 100);
+      const skip = ((parseInt(page) || 1) - 1) * take;
+
+      const [data, total] = await Promise.all([
+        prisma.bundle.findMany({ where, include, orderBy: { name: 'asc' }, skip, take }),
+        prisma.bundle.count({ where })
+      ]);
+
+      return res.json({
+        data,
+        total,
+        page: parseInt(page) || 1,
+        limit: take,
+        totalPages: Math.ceil(total / take)
+      });
+    }
+
+    // No pagination — return flat array (backward compatible)
     const bundles = await prisma.bundle.findMany({
       where,
-      include: {
-        items: {
-          include: {
-            sessionType: true
-          }
-        }
-      },
-      orderBy: { createdAt: 'desc' }
+      include,
+      orderBy: { name: 'asc' }
     });
-
     res.json(bundles);
   } catch (error) {
     console.error('GET bundles error:', error);
