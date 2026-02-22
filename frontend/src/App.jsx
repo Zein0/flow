@@ -10,6 +10,8 @@ import Services from './pages/Services';
 import Patients from './pages/Patients';
 import PatientDetail from './pages/PatientDetail';
 import Doctors from './pages/Doctors';
+import DoctorDetail from './pages/DoctorDetail';
+import DoctorForm from './pages/DoctorForm';
 import Reports from './pages/Reports';
 import DoctorCalendar from './pages/DoctorCalendar';
 import Bundles from './pages/Bundles';
@@ -90,6 +92,21 @@ export default function App() {
           <Route path="doctors" element={
             <RoleProtectedRoute allowedRoles={['admin']}>
               <Doctors />
+            </RoleProtectedRoute>
+          } />
+          <Route path="doctors/new" element={
+            <RoleProtectedRoute allowedRoles={['admin']}>
+              <DoctorForm />
+            </RoleProtectedRoute>
+          } />
+          <Route path="doctors/:doctorId" element={
+            <RoleProtectedRoute allowedRoles={['admin']}>
+              <DoctorDetail />
+            </RoleProtectedRoute>
+          } />
+          <Route path="doctors/:doctorId/edit" element={
+            <RoleProtectedRoute allowedRoles={['admin']}>
+              <DoctorForm />
             </RoleProtectedRoute>
           } />
           <Route path="bundles" element={
